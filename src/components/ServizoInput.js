@@ -41,10 +41,10 @@ export default function ServizoInput({
           style={[
             styles.input,
             Platform.OS === "web" && {
-              outline: "none", // ✅ no outline
-              border: "none", // ✅ no border
-              boxShadow: "none", // ✅ remove browser’s inset shadow
-              appearance: "none", // ✅ removes default style in Safari/Edge
+              outline: "none",
+              border: "none",
+              boxShadow: "none",
+              appearance: "none",
               backgroundColor: "transparent",
             },
           ]}

@@ -4,13 +4,14 @@ import Toast from "react-native-toast-message";
 import { ServizoToast } from "./src/components/ServizoToast";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
+import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 
 const Stack = createNativeStackNavigator();
 
-// 🔥 CUSTOM TOAST CONFIG
+
 const toastConfig = {
   success: (props) => <ServizoToast {...props} type="success" />,
   error: (props) => <ServizoToast {...props} type="error" />,
@@ -28,6 +29,11 @@ function AppNavigator() {
         <>
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+          
+          <Stack.Screen
+            name="ForgotPasswordScreen"
+            component={ForgotPasswordScreen}
+          />
         </>
       )}
     </Stack.Navigator>
@@ -40,7 +46,7 @@ export default function App() {
       <NavigationContainer>
         <AppNavigator />
 
-        {/* ✅ GLOBAL TOAST */}
+       
         <Toast
           config={toastConfig}
           position="top"

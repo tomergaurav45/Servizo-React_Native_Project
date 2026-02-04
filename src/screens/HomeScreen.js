@@ -1,9 +1,9 @@
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { COLORS } from "../utils/constants";
 
@@ -19,10 +19,10 @@ const services = [
 export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
+      
       <View style={styles.header}>
         <View>
-          <Text style={styles.welcome}>Hello 👋</Text>
+          <Text style={styles.welcome}>Hello </Text>
           <Text style={styles.location}>Delhi NCR</Text>
         </View>
         <TouchableOpacity>

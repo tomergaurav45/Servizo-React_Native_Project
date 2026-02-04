@@ -8,7 +8,7 @@ export default function ServizoButton({
   textStyle,
   disabled = false,
   loading = false,
-  variant = "primary", // "primary" | "secondary" | "outline"
+  variant = "primary",
   iconLeft = null,
   iconRight = null,
 }) {

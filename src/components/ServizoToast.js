@@ -1,9 +1,8 @@
-// src/components/ServizoToast.js
-import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+
+import { Image, StyleSheet, Text, View } from "react-native";
 import { COLORS } from "../utils/constants";
 
-// Custom Servizo Toast component
+
 export const ServizoToast = ({ text1, text2, type }) => {
   const isSuccess = type === "success";
   const isError = type === "error";
@@ -12,24 +11,24 @@ export const ServizoToast = ({ text1, text2, type }) => {
   const backgroundColor = isSuccess
     ? "#E8F5E9"
     : isError
-    ? "#FFEBEE"
-    : "#E3F2FD";
+      ? "#FFEBEE"
+      : "#E3F2FD";
 
   const borderColor = isSuccess
     ? COLORS.primary
     : isError
-    ? "#E53935"
-    : "#2196F3";
+      ? "#E53935"
+      : "#2196F3";
 
   const textColor = isSuccess
     ? COLORS.primary
     : isError
-    ? "#C62828"
-    : "#1976D2";
+      ? "#C62828"
+      : "#1976D2";
 
   return (
     <View style={[styles.container, { backgroundColor, borderLeftColor: borderColor }]}>
-      {/* Optional: App Logo */}
+      
       <Image
         source={require("../../assets/images/icon1.png")}
         style={styles.icon}

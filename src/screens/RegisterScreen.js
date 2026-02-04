@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Dimensions,
   Image,
   ImageBackground,
@@ -10,11 +9,18 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { registerUser, sendEmailOtp, verifyEmailOtp } from "../apis/authApi";
+import Toast from "react-native-toast-message";
 import ServizoInput from "../components/ServizoInput";
 import { COLORS } from "../utils/constants";
+
+import {
+  registerUser,
+  sendEmailOtp,
+  sendWelcomeMail,
+  verifyEmailOtp
+} from "../apis/authApi";
 
 const { width, height } = Dimensions.get("window");
 
@@ -27,57 +33,134 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSendOTP = async () => {
-  if (!email.includes("@")) {
-    Alert.alert("Invalid Email", "Please enter a valid email address.");
-    return;
-  }
-
-  try {
-    const response = await sendEmailOtp(email);
-
-    if (response.success) {
-      setOtpSent(true);
-      Alert.alert("OTP Sent", "OTP has been sent to your email.");
-    } else {
-      Alert.alert("Error", response.message || "Failed to send OTP");
-    }
-  } catch (error) {
-    Alert.alert("Server Error", "Unable to send OTP. Try again later.");
-  }
-};
-
-
- const handleRegister = async () => {
-  try {
-    const otpResponse = await verifyEmailOtp(email, otp);
-
-    if (!otpResponse.success) {
-      Alert.alert("OTP Error", otpResponse.message);
-      return;
-    }
-
-    // ✅ OTP verified
-    const registerResponse = await registerUser({
-      firstName,
-      lastName,
-      email,
-      password,
+  const showError = (title, message) => {
+    Toast.show({
+      type: "error",
+      text1: title,
+      text2: message,
     });
+  };
 
-    if (!registerResponse.success) {
-      Alert.alert("Register Error", registerResponse.message);
+  const handleSendOTP = async () => {
+    if (!email.trim()) {
+      showError("Email Required", "Please enter your email");
       return;
     }
 
-    Alert.alert("Success", "Account created successfully!");
-    navigation.replace("LoginScreen");
+    if (!email.includes("@")) {
+      showError("Invalid Email", "Please enter a valid email address");
+      return;
+    }
 
-  } catch (error) {
-    Alert.alert("Error", "Something went wrong");
-  }
-};
+    try {
+      const response = await sendEmailOtp(email);
 
+      console.log("SEND OTP RESPONSE ", response);
+
+      if (!response.success) {
+
+        showError("Registration Error", response.message);
+        return;
+      }
+
+      setOtpSent(true);
+
+      Toast.show({
+        type: "info",
+        text1: "OTP Sent",
+        text2: "Check your email for OTP",
+      });
+    } catch (error) {
+      console.log("SEND OTP ERROR ", error);
+      showError("Server Error", "Unable to send OTP");
+    }
+  };
+
+  const handleRegister = async () => {
+
+    if (!firstName.trim()) {
+      showError("First Name Required", "Please enter your first name");
+      return;
+    }
+
+    if (!lastName.trim()) {
+      showError("Last Name Required", "Please enter your last name");
+      return;
+    }
+
+    if (!email.trim()) {
+      showError("Email Required", "Please enter your email address");
+      return;
+    }
+
+    if (!email.includes("@")) {
+      showError("Invalid Email", "Please enter a valid email address");
+      return;
+    }
+
+    if (!otp.trim()) {
+      showError("OTP Required", "Please enter the OTP sent to your email");
+      return;
+    }
+
+    if (!password) {
+      showError("Password Required", "Please enter a password");
+      return;
+    }
+
+    if (password.length < 6) {
+      showError("Weak Password", "Password must be at least 6 characters");
+      return;
+    }
+
+    if (!confirmPassword) {
+      showError("Confirm Password", "Please confirm your password");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showError("Password Mismatch", "Passwords do not match");
+      return;
+    }
+
+    try {
+
+      const otpResponse = await verifyEmailOtp(email, otp);
+
+      if (!otpResponse.success) {
+        showError("OTP Error", otpResponse.message || "Invalid OTP");
+        return;
+      }
+
+
+      const registerResponse = await registerUser({
+        firstName,
+        lastName,
+        email,
+        password,
+      });
+
+      if (!registerResponse.success) {
+        showError("Registration Failed", registerResponse.message);
+        return;
+      }
+
+
+      sendWelcomeMail(email, `${firstName} ${lastName}`);
+
+
+      Toast.show({
+        type: "success",
+        text1: "Registration Successful",
+        text2: "You can now login to Servizo",
+      });
+
+      navigation.replace("LoginScreen");
+
+    } catch (error) {
+      showError("Server Error", "Something went wrong. Try again later.");
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -89,12 +172,12 @@ export default function RegisterScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         <ImageBackground
-          source={require("../../assets/images/loginbg.png")}
+          source={require("../../assets/images/loginbg3.jpg")}
           style={styles.background}
           resizeMode="cover"
         >
           <View style={styles.overlay}>
-            {/* Logo */}
+
             <View style={styles.brandRow}>
               <Image
                 source={require("../../assets/images/icon1.png")}
@@ -105,7 +188,7 @@ export default function RegisterScreen({ navigation }) {
 
             <Text style={styles.subtitle}>Create your Servizo account</Text>
 
-            {/* Name */}
+
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 5 }}>
                 <ServizoInput
@@ -127,7 +210,7 @@ export default function RegisterScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Email */}
+
             <ServizoInput
               label="Email"
               placeholder="Enter your email"
@@ -137,20 +220,20 @@ export default function RegisterScreen({ navigation }) {
               onChangeText={setEmail}
             />
 
-            {/* Email OTP */}
+
             {!otpSent ? (
               <TouchableOpacity
-  style={[
-    styles.otpButton,
-    otpSent && { backgroundColor: "#aaa" },
-  ]}
-  onPress={handleSendOTP}
-  disabled={otpSent}
->
-  <Text style={styles.otpText}>
-    {otpSent ? "OTP Sent" : "Send OTP"}
-  </Text>
-</TouchableOpacity>
+                style={[
+                  styles.otpButton,
+                  otpSent && { backgroundColor: "#aaa" },
+                ]}
+                onPress={handleSendOTP}
+                disabled={otpSent}
+              >
+                <Text style={styles.otpText}>
+                  {otpSent ? "OTP Sent" : "Send OTP"}
+                </Text>
+              </TouchableOpacity>
 
             ) : (
               <ServizoInput
@@ -163,7 +246,7 @@ export default function RegisterScreen({ navigation }) {
               />
             )}
 
-            {/* Password */}
+
             <ServizoInput
               label="Password"
               placeholder="Enter your password"
@@ -182,12 +265,12 @@ export default function RegisterScreen({ navigation }) {
               onChangeText={setConfirmPassword}
             />
 
-            {/* Register */}
+
             <TouchableOpacity style={styles.button} onPress={handleRegister}>
               <Text style={styles.buttonText}>REGISTER</Text>
             </TouchableOpacity>
 
-            {/* Login */}
+
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
               <TouchableOpacity onPress={() => navigation.replace("LoginScreen")}>
@@ -204,7 +287,7 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    width,
+    width: "100%",
     height,
     justifyContent: "center",
     alignItems: "center",

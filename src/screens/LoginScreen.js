@@ -11,6 +11,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import ServizoButton from "../components/ServizoButton";
 import ServizoCheckbox from "../components/ServizoCheckbox";
 import ServizoInput from "../components/ServizoInput";
@@ -19,13 +20,13 @@ import { COLORS } from "../utils/constants";
 const { height } = Dimensions.get("window");
 
 export default function LoginScreen({ navigation }) {
-  const { login } = useAuth(); // ✅ AUTH CONTEXT
+  const { login } = useAuth(); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Responsive logic
+  
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isLargeScreen = width > 768;
@@ -35,21 +36,31 @@ export default function LoginScreen({ navigation }) {
       ? require("../../assets/images/loginbg.png")
       : require("../../assets/images/loginbg2.jpg");
 
-  // ✅ UPDATED LOGIN HANDLER
+  
   const handleLogin = () => {
-    if (!email || !password) {
-      alert("Please fill in all fields.");
-      return;
-    }
+  if (!email || !password) {
+    Toast.show({
+      type: "error",
+      text1: "Missing details",
+      text2: "Please fill in all fields",
+    });
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      alert("Login successful!");
-      login(); // ✅ THIS switches to HomeScreen automatically
-    }, 1500);
-  };
+  setTimeout(() => {
+    setLoading(false);
+
+    Toast.show({
+      type: "success",
+      text1: "Login successful",
+      text2: "Welcome to Servizo",
+    });
+
+    login({ email });
+  }, 1500);
+};
 
   return (
     <KeyboardAvoidingView
@@ -66,7 +77,7 @@ export default function LoginScreen({ navigation }) {
           resizeMode="cover"
         >
           <View style={styles.overlay}>
-            {/* Logo */}
+
             <View style={styles.brandRow}>
               <Image
                 source={require("../../assets/images/icon1.png")}
@@ -77,7 +88,7 @@ export default function LoginScreen({ navigation }) {
 
             <Text style={styles.subtitle}>Login to continue</Text>
 
-            {/* Inputs */}
+           
             <ServizoInput
               label="Email"
               placeholder="Enter your email"
@@ -96,7 +107,7 @@ export default function LoginScreen({ navigation }) {
               onChangeText={setPassword}
             />
 
-            {/* Remember + Forgot */}
+           
             <View style={styles.row}>
               <ServizoCheckbox
                 label="Remember me"
@@ -104,14 +115,14 @@ export default function LoginScreen({ navigation }) {
                 onChange={(value) => setRemember(value)}
               />
               <Text
-                style={styles.forgotText}
-                onPress={() => alert("Forgot Password pressed!")}
-              >
-                Forgot password?
-              </Text>
+  style={styles.forgotText}
+  onPress={() => navigation.navigate("ForgotPasswordScreen")}
+>
+  Forgot password?
+</Text>
             </View>
 
-            {/* Login Button */}
+            
             <ServizoButton
               title="LOGIN"
               onPress={handleLogin}
@@ -119,7 +130,7 @@ export default function LoginScreen({ navigation }) {
               style={{ marginTop: 10 }}
             />
 
-            {/* Register */}
+           
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>
                 Don’t have an account?{" "}
