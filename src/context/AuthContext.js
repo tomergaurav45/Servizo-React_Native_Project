@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// ✅ THIS WAS MISSING (VERY IMPORTANT)
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

@@ -140,3 +140,30 @@ export const sendWelcomeMail = async (email, name) => {
     };
   }
 };
+
+export const loginUser = async (email, password) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.LOGIN, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Login failed",
+        field: data.field || null,
+      };
+    }
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error during login",
+    };
+  }
+};

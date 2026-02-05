@@ -12,11 +12,15 @@ import {
   useWindowDimensions,
 } from "react-native";
 import Toast from "react-native-toast-message";
+
+import { loginUser } from "../apis/authApi";
+
 import ServizoButton from "../components/ServizoButton";
-import ServizoCheckbox from "../components/ServizoCheckbox";
 import ServizoInput from "../components/ServizoInput";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
+
+
 const { height } = Dimensions.get("window");
 
 export default function LoginScreen({ navigation }) {
@@ -37,7 +41,7 @@ export default function LoginScreen({ navigation }) {
       : require("../../assets/images/loginbg2.jpg");
 
   
-  const handleLogin = () => {
+  const handleLogin = async () => {
   if (!email || !password) {
     Toast.show({
       type: "error",
@@ -49,17 +53,38 @@ export default function LoginScreen({ navigation }) {
 
   setLoading(true);
 
-  setTimeout(() => {
-    setLoading(false);
+  try {
+    const result = await loginUser(email, password);
 
+    if (!result.success) {
+     
+      Toast.show({
+        type: "error",
+        text1: "Login failed",
+        text2: result.message,
+      });
+      return;
+    }
+
+    
     Toast.show({
       type: "success",
       text1: "Login successful",
-      text2: "Welcome to Servizo",
+      text2: `Welcome ${result.user.name}`,
     });
 
-    login({ email });
-  }, 1500);
+    
+    login(result.user);
+
+  } catch (error) {
+    Toast.show({
+      type: "error",
+      text1: "Error",
+      text2: "Something went wrong",
+    });
+  } finally {
+    setLoading(false);
+  }
 };
 
   return (
@@ -109,11 +134,7 @@ export default function LoginScreen({ navigation }) {
 
            
             <View style={styles.row}>
-              <ServizoCheckbox
-                label="Remember me"
-                checked={remember}
-                onChange={(value) => setRemember(value)}
-              />
+             
               <Text
   style={styles.forgotText}
   onPress={() => navigation.navigate("ForgotPasswordScreen")}
@@ -190,8 +211,8 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     color: COLORS.primary,
-    fontWeight: "600",
-    fontSize: 10.5,
+    fontWeight: "bold", 
+    fontSize: 13,
   },
   registerContainer: {
     flexDirection: "row",
