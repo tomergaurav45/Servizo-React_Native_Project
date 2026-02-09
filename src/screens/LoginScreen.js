@@ -85,6 +85,7 @@ export default function LoginScreen({ navigation }) {
   } finally {
     setLoading(false);
   }
+  
 };
 
   return (
