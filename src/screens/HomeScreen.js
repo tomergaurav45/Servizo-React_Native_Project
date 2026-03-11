@@ -1,5 +1,5 @@
-
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../utils/constants";
+
 const categories = [
   { id: 1, name: "Home Cleaning", icon: "home-outline" },
   { id: 2, name: "Electrician", icon: "flash-outline" },
@@ -19,16 +20,61 @@ const categories = [
 ];
 
 export default function HomeScreen() {
+
+  const [location, setLocation] = useState(null);
+  const [address, setAddress] = useState("");
+
+useEffect(() => {
+  (async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission to access location was denied");
+      return;
+    }
+
+    let loc = await Location.getCurrentPositionAsync({});
+    setLocation(loc.coords);
+
+    const addr = await Location.reverseGeocodeAsync({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    });
+
+    if (addr.length > 0) {
+      setAddress(`${addr[0].city}, ${addr[0].region}`);
+    }
+  })();
+}, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+      <TouchableOpacity style={styles.locationBar}>
+  <Ionicons name="location-outline" size={20} color={COLORS.primary} />
+
+  <View style={{ marginLeft: 8 }}>
+    <Text style={styles.locationLabel}>Your Location</Text>
+    <Text style={styles.locationText}>
+      {address || "Detecting location..."}
+    </Text>
+  </View>
+
+  <Ionicons
+    name="chevron-forward-outline"
+    size={18}
+    color="#999"
+    style={{ marginLeft: "auto" }}
+  />
+</TouchableOpacity>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hi </Text>
-          <Text style={styles.subText}>What service do you need today?</Text>
+          <Text style={styles.greeting}>Hi</Text>
+          <Text style={styles.subText}>
+            What service do you need today?
+          </Text>
         </View>
 
         {/* Search */}
@@ -61,6 +107,7 @@ export default function HomeScreen() {
             <Text style={styles.popularPrice}>Starting ₹499</Text>
           </View>
         </ScrollView>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -140,6 +187,31 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginTop: 6,
   },
+  map: {
+  width: "100%",
+  height: 200,
+  borderRadius: 15,
+  marginBottom: 15,
+},
+locationBar: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f5f5f5",
+  padding: 14,
+  borderRadius: 12,
+  marginBottom: 15,
+},
+
+locationLabel: {
+  fontSize: 12,
+  color: "#777",
+},
+
+locationText: {
+  fontSize: 14,
+  fontWeight: "600",
+  color: COLORS.textDark,
+}
 });
 
 
