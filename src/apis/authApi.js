@@ -47,21 +47,31 @@ export const verifyEmailOtp = async (email, otp) => {
 
 
 export const registerUser = async ({
+  userId,
   firstName,
   lastName,
   email,
   password,
+  role,
 }) => {
   try {
+
+    const payload = {
+      userId,
+      role
+    };
+
+    if (firstName && lastName) {
+      payload.name = `${firstName} ${lastName}`;
+    }
+
+    if (email) payload.email = email;
+    if (password) payload.password = password;
+
     const response = await fetch(AUTH_ENDPOINTS.REGISTER, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: `${firstName} ${lastName}`,
-        email,
-        phoneNumber: "9999999999",
-        password,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
@@ -74,6 +84,7 @@ export const registerUser = async ({
     }
 
     return data;
+
   } catch (error) {
     return {
       success: false,

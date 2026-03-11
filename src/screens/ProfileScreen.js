@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -62,9 +62,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* User Info */}
-        <Text style={styles.name}>
-          {user?.firstName} {user?.lastName}
-        </Text>
+        <Text style={styles.email}>{user?.name}</Text>
         <Text style={styles.email}>{user?.email}</Text>
 
         {/* Divider */}
