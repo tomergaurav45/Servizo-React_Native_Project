@@ -1,9 +1,11 @@
 import { useState } from "react";
 import {
+    Image,
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ServizoDatePicker from "../components/ServizoDatePicker";
@@ -32,8 +34,15 @@ export default function EditProfileScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.header}>
+  <Image
+    source={require("../../assets/images/icon1.png")}
+    style={styles.icon}
+    resizeMode="contain"
+  />
 
-        <Text style={styles.title}>Edit Profile</Text>
+  <Text style={styles.title}>Edit Profile</Text>
+</View>
 
         <ServizoInput
           label="First Name"
@@ -86,7 +95,7 @@ export default function EditProfileScreen() {
           value={role}
           editable={false}
         />
-        
+
         <ServizoMultiSelectDropdown
   label="Skills"
   icon="build-outline"
@@ -126,12 +135,13 @@ export default function EditProfileScreen() {
           onSelect={setExperience}
         />
 
-        <ServizoInput
+        <ServizoDropdown
           label="Availability"
           placeholder="Availability"
           icon="calendar-outline"
+           data={["Part time", "Full Time", "Only Weekends"]}
           value={availability}
-          onChangeText={setAvailability}
+          onSelect={setAvailability}
         />
 
         <TouchableOpacity style={styles.saveBtn}>
@@ -166,6 +176,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: COLORS.primary,
   },
+    header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
 
   saveBtn: {
     backgroundColor: COLORS.primary,
@@ -178,5 +193,10 @@ const styles = StyleSheet.create({
   saveText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+   icon: {
+    width: 75,
+    height: 75,
+    marginRight: 5,
   },
 });

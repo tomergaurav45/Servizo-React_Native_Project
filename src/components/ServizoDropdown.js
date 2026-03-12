@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    FlatList,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -50,11 +50,14 @@ export default function ServizoDropdown({
 
       {open && (
         <View style={styles.dropdown}>
-          <FlatList
-            data={data}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
+          <ScrollView
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={false}
+            style={{ maxHeight: 200 }}
+          >
+            {data.map((item, index) => (
               <TouchableOpacity
+                key={index}
                 style={styles.option}
                 onPress={() => {
                   onSelect(item);
@@ -63,8 +66,8 @@ export default function ServizoDropdown({
               >
                 <Text style={styles.optionText}>{item}</Text>
               </TouchableOpacity>
-            )}
-          />
+            ))}
+          </ScrollView>
         </View>
       )}
     </View>
