@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
   const [image, setImage] = useState(null);
 
@@ -69,7 +69,10 @@ export default function ProfileScreen() {
         <View style={styles.divider} />
 
         {/* Actions */}
-        <TouchableOpacity style={styles.option}>
+       <TouchableOpacity
+  style={styles.option}
+  onPress={() => navigation.navigate("EditProfileScreen")}
+>
           <Ionicons name="person-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Edit Profile</Text>
         </TouchableOpacity>

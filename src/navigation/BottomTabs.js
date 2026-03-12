@@ -12,6 +12,19 @@ const Tab = createBottomTabNavigator();
 export default function BottomTabs() {
   const insets = useSafeAreaInsets();
 
+  const getIcon = (routeName) => {
+    switch (routeName) {
+      case "Home":
+        return "home-outline";
+      case "Bookings":
+        return "calendar-outline";
+      case "Profile":
+        return "person-outline";
+      default:
+        return "ellipse-outline";
+    }
+  };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -19,18 +32,13 @@ export default function BottomTabs() {
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: "#999",
         tabBarStyle: {
-          height: 60 + insets.bottom, 
+          height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
           paddingTop: 6,
         },
-        tabBarIcon: ({ color, size }) => {
-          let icon;
-          if (route.name === "Home") icon = "home-outline";
-          if (route.name === "Bookings") icon = "calendar-outline";
-          if (route.name === "Profile") icon = "person-outline";
-
-          return <Ionicons name={icon} size={size} color={color} />;
-        },
+        tabBarIcon: ({ color, size }) => (
+          <Ionicons name={getIcon(route.name)} size={size} color={color} />
+        ),
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
