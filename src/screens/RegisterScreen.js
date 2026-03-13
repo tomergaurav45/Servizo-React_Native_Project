@@ -305,8 +305,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   logo: {
-    width: 220,
-    height: 140,
+    width: 180,
+    height: 100,
   },
   subtitle: {
     fontSize: 16,
@@ -323,6 +323,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     marginTop: 10,
+    marginBottom: 15
   },
   otpText: {
     color: COLORS.white,
