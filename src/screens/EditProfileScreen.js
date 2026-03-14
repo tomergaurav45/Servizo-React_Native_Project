@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Image,
     ScrollView,
@@ -37,11 +37,19 @@ const [showRoleAlert, setShowRoleAlert] = useState(false);
 
 const [dob, setDob] = useState(user?.dob || "");
 const [phone, setPhone] = useState(user?.phone || "");
+const [phoneError, setPhoneError] = useState("");
 const [gender, setGender] = useState(user?.gender || "");
 const [skills, setSkills] = useState(user?.skills || []);
 const [experience, setExperience] = useState(user?.experience || "");
 const [availability, setAvailability] = useState(user?.availability || "");
 const [role, setRole] = useState(user?.role || "");
+//const [phoneError, setPhoneError] = useState("");
+const [genderError, setGenderError] = useState("");
+const [dobError, setdobError] = useState("");
+const [skillsError, setSkillsError] = useState("");
+const [experienceError, setExperienceError] = useState("");
+const [availabilityError, setAvailabilityError] = useState("");
+
 
 const handleRolePress = () => {
 
@@ -60,6 +68,34 @@ const handleRolePress = () => {
 
 const handleSaveChanges = async () => {
 
+  if (!phone || phone.length !== 10) {
+  setPhoneError("Phone number must be exactly 10 digits");
+  return;
+}
+
+if (!gender) {
+  setGenderError("Gender is missing");
+  return;
+}
+if (!dob) {
+  setdobError("Date of Birth is missing");
+  return;
+}
+
+if (!skills || skills.length === 0) {
+  setSkillsError("Skills are missing");
+  return;
+}
+
+if (!experience) {
+  setExperienceError("Experience is missing");
+  return;
+}
+
+if (!availability) {
+  setAvailabilityError("Availability is missing");
+  return;
+}
   try {
 
     const result = await registerUser({
@@ -116,6 +152,32 @@ navigation.goBack();
 
 };
 
+const handlePhoneChange = (value) => {
+
+  const numericValue = value.replace(/[^0-9]/g, "");
+
+  if (numericValue.length <= 10) {
+    setPhone(numericValue);
+  }
+
+  if (numericValue.length === 10) {
+    setPhoneError("");
+  } else {
+    setPhoneError("Phone number must be exactly 10 digits");
+  }
+};
+
+useEffect(() => {
+
+  if (!phone) setPhoneError("Phone number is missing");
+  if (!gender) setGenderError("Gender is missing");
+  if (!dob) setdobError("Date of Birth is missing");
+  if (!skills || skills.length === 0) setSkillsError("Skills are missing");
+  if (!experience) setExperienceError("Experience is missing");
+  if (!availability) setAvailabilityError("Availability is missing");
+
+}, []);
+
   return (
   <SafeAreaView style={styles.safeArea}>
     <ScrollView
@@ -159,8 +221,15 @@ navigation.goBack();
         <ServizoDatePicker
           label="Date of Birth"
           value={dob}
-          onChange={setDob}
+          onSelect={(value) => {
+  setDob(value);
+  setdobError("");
+}}
         />
+        {dobError ? (
+  <Text style={styles.errorText}>{dobError}</Text>
+) : null}
+
 
         <ServizoInput
           label="Phone Number"
@@ -168,8 +237,11 @@ navigation.goBack();
           icon="call-outline"
           keyboardType="phone-pad"
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={handlePhoneChange}
         />
+        {phoneError ? (
+  <Text style={styles.errorText}>{phoneError}</Text>
+) : null}
 
         <ServizoDropdown
           label="Gender"
@@ -177,8 +249,14 @@ navigation.goBack();
           data={["Male", "Female", "Other"]}
           value={gender}
           placeholder="Select Gender"
-          onSelect={setGender}
+          onSelect={(value) => {
+  setGender(value);
+  setGenderError("");
+}}
         />
+        {genderError ? (
+  <Text style={styles.errorText}>{genderError}</Text>
+) : null}
 
         <Text style={styles.title2}>Professional Information</Text>
 
@@ -215,8 +293,14 @@ navigation.goBack();
           ]}
           selectedValues={skills}
           placeholder="Select Skills"
-          onChange={setSkills}
+          onChange={(value) => {
+  setSkills(value);
+  setSkillsError("");
+}}
         />
+        {skillsError ? (
+  <Text style={styles.errorText}>{skillsError}</Text>
+) : null}
 
         <ServizoDropdown
           label="Experience"
@@ -224,8 +308,14 @@ navigation.goBack();
           icon="time-outline"
           data={["0-1 Year", "1-3 Years", "3-8 Year", "8+ Year"]}
           value={experience}
-          onSelect={setExperience}
+          onSelect={(value) => {
+  setExperience(value);
+  setExperienceError("");
+}}
         />
+        {experienceError ? (
+  <Text style={styles.errorText}>{experienceError}</Text>
+) : null}
 
         <ServizoDropdown
           label="Availability"
@@ -233,8 +323,14 @@ navigation.goBack();
           icon="calendar-outline"
           data={["Part time", "Full Time", "Only Weekends"]}
           value={availability}
-          onSelect={setAvailability}
+          onSelect={(value) => {
+  setAvailability(value);
+  setAvailabilityError("");
+}}
         />
+        {availabilityError ? (
+  <Text style={styles.errorText}>{availabilityError}</Text>
+) : null}
 
        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveChanges}>
           <Text style={styles.saveText}>Save Changes</Text>
@@ -302,7 +398,7 @@ const styles = StyleSheet.create({
     height: 70
   },
   formCard: {
-  backgroundColor: "#fff",
+  backgroundColor: COLORS.background2,
   borderRadius: 20,
   padding: 20,
 
@@ -322,5 +418,11 @@ subtitle: {
   fontSize: 13,
   color: "#777",
   marginTop: 2,
+},
+errorText: {
+  color: "red",
+  fontSize: 12,
+  marginTop: -10,
+  marginBottom: 10
 },
 });
