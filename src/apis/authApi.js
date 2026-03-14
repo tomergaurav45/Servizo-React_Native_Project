@@ -53,20 +53,30 @@ export const registerUser = async ({
   email,
   password,
   role,
+  dob,
+  phone,
+  gender,
+  skills,
+  experience,
+  availability
 }) => {
   try {
 
-    const payload = {
-      userId,
-      role
-    };
+    const payload = { userId };
 
-    if (firstName && lastName) {
-      payload.name = `${firstName} ${lastName}`;
+    if (firstName || lastName) {
+      payload.name = `${firstName || ""} ${lastName || ""}`.trim();
     }
 
-    if (email) payload.email = email;
-    if (password) payload.password = password;
+    if (email !== undefined) payload.email = email;
+    if (password !== undefined) payload.password = password;
+    if (role !== undefined) payload.role = role;
+    if (dob !== undefined) payload.dob = dob;
+    if (phone !== undefined) payload.phone = phone;
+    if (gender !== undefined) payload.gender = gender;
+    if (skills !== undefined) payload.skills = skills;
+    if (experience !== undefined) payload.experience = experience;
+    if (availability !== undefined) payload.availability = availability;
 
     const response = await fetch(AUTH_ENDPOINTS.REGISTER, {
       method: "POST",

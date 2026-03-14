@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { COLORS } from "../utils/constants";
@@ -23,7 +24,7 @@ export default function ServizoBackButton({
       onPress={handleBack}
       activeOpacity={0.7}
     >
-      <Text style={styles.backText}>← {label}</Text>
+      <Text style={styles.backText}><Ionicons name="arrow-back-circle-sharp" size={24} color={COLORS.primary} /> {label}</Text>
     </TouchableOpacity>
   );
 }
@@ -34,7 +35,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     color: COLORS.primary,
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: "600",
   },
 });

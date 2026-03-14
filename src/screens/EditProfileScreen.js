@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import {
     Image,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import { registerUser } from "../apis/authApi";
 import { ServizoAlert } from "../components/ServizoAlert";
 import ServizoBackButton from "../components/ServizoBackButton";
 import ServizoDatePicker from "../components/ServizoDatePicker";
@@ -16,22 +18,30 @@ import ServizoDropdown from "../components/ServizoDropdown";
 import ServizoInput from "../components/ServizoInput";
 import ServizoMultiSelectDropdown from "../components/ServizoMultiSelectDropdown";
 import { useAuth } from "../context/AuthContext";
+
 import { COLORS } from "../utils/constants";
 
 export default function EditProfileScreen() {
-  const { user } = useAuth();
+ const { user, login } = useAuth();
+ const navigation = useNavigation();
 
-  const [firstName, setFirstName] = useState(user?.name?.split(" ")[0] || "");
-  const [lastName, setLastName] = useState(user?.name?.split(" ")[1] || "");
-  const [dob, setDob] = useState("");
-  const [phone, setPhone] = useState("");
-  const [gender, setGender] = useState("");
-  const [skills, setSkills] = useState([]);
-  const [experience, setExperience] = useState("");
-  const [availability, setAvailability] = useState("");
-  const [role, setRole] = useState(user?.role || "");
+ const nameParts = user?.name?.split(" ") || [];
+
+const [firstName, setFirstName] = useState(nameParts[0] || "");
+const [lastName, setLastName] = useState(nameParts.slice(1).join(" ") || "");
+
+//const [role, setRole] = useState(user?.role || "");
+
 const [roleEditable, setRoleEditable] = useState(false);
 const [showRoleAlert, setShowRoleAlert] = useState(false);
+
+const [dob, setDob] = useState(user?.dob || "");
+const [phone, setPhone] = useState(user?.phone || "");
+const [gender, setGender] = useState(user?.gender || "");
+const [skills, setSkills] = useState(user?.skills || []);
+const [experience, setExperience] = useState(user?.experience || "");
+const [availability, setAvailability] = useState(user?.availability || "");
+const [role, setRole] = useState(user?.role || "");
 
 const handleRolePress = () => {
 
@@ -43,7 +53,67 @@ const handleRolePress = () => {
     text2: "Confirm if you want to change your role",
   });
 
+ 
+
   setShowRoleAlert(true);
+};
+
+const handleSaveChanges = async () => {
+
+  try {
+
+    const result = await registerUser({
+      userId: user?.userId,
+      firstName,
+      lastName,
+      role,
+      dob,
+      phone,
+      gender,
+      skills,
+      experience,
+      availability
+    });
+
+    if (!result.success) {
+      Toast.show({
+        type: "error",
+        text1: "Update Failed",
+        text2: result.message,
+      });
+      return;
+    }
+
+    Toast.show({
+      type: "success",
+      text1: "Profile Updated",
+      text2: "Your details were updated successfully",
+    });
+
+     login({
+  ...user,
+  name: `${firstName} ${lastName}`,
+  role,
+  phone,
+  gender,
+  skills,
+  experience,
+  availability,
+  dob
+});
+
+navigation.goBack();
+
+  } catch (error) {
+
+    Toast.show({
+      type: "error",
+      text1: "Error",
+      text2: "Something went wrong",
+    });
+
+  }
+
 };
 
   return (
@@ -166,7 +236,7 @@ const handleRolePress = () => {
           onSelect={setAvailability}
         />
 
-        <TouchableOpacity style={styles.saveBtn}>
+       <TouchableOpacity style={styles.saveBtn} onPress={handleSaveChanges}>
           <Text style={styles.saveText}>Save Changes</Text>
         </TouchableOpacity>
 
@@ -228,9 +298,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
    icon: {
-    width: 50,
-    height: 50,
-    marginRight: 5,
+    width: 70,
+    height: 70
   },
   formCard: {
   backgroundColor: "#fff",
