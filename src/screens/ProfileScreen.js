@@ -77,7 +77,10 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.optionText}>Edit Profile</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option}>
+        <TouchableOpacity
+  style={styles.option}
+  onPress={() => navigation.navigate("ManageAddressScreen")}
+>
           <Ionicons name="location-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Manage Address</Text>
         </TouchableOpacity>

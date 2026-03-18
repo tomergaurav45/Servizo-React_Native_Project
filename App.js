@@ -6,12 +6,12 @@ import { ServizoToast } from "./src/components/ServizoToast";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
 import BottomTabs from "./src/navigation/BottomTabs";
-
+import AddAddressMap from "./src/screens/AddAddressMap";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import LoginScreen from "./src/screens/LoginScreen";
+import ManageAddressScreen from "./src/screens/ManageAddressScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
-
 const Stack = createNativeStackNavigator();
 
 const toastConfig = {
@@ -29,6 +29,14 @@ function AppNavigator() {
         <>
           <Stack.Screen name="MainTabs" component={BottomTabs} />
           <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+           <Stack.Screen
+  name="ManageAddressScreen"
+  component={ManageAddressScreen}
+/>
+<Stack.Screen
+  name="AddAddressMap"
+  component={AddAddressMap}
+/>
         </>
       ) : (
         <>
@@ -38,7 +46,9 @@ function AppNavigator() {
             name="ForgotPasswordScreen"
             component={ForgotPasswordScreen}
           />
+         
         </>
+        
       )}
     </Stack.Navigator>
   );
