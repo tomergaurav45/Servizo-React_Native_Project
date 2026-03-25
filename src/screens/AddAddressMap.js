@@ -10,8 +10,11 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+import { saveAddress } from "../apis/authApi";
 import ServizoDropdown from "../components/ServizoDropdown";
 import ServizoInput from "../components/ServizoInput";
+import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
 export default function AddAddressMap({ navigation }) {
@@ -24,7 +27,7 @@ export default function AddAddressMap({ navigation }) {
     const [landmark, setLandmark] = useState("");
     const [tag, setTag] = useState("Home");
     const [customTag, setCustomTag] = useState("");
-
+    const { user } = useAuth();
     const getAddressFromCoords = async (coords) => {
         try {
             setLoading(true);
@@ -211,15 +214,52 @@ export default function AddAddressMap({ navigation }) {
                                     { opacity: house ? 1 : 0.5 }
                                 ]}
                                 disabled={!house}
-                                onPress={() => {
-                                    navigation.navigate("EditProfile", {
-                                        selectedAddress: address,
-                                        coordinates: location,
-                                        house,
-                                        landmark,
-                                        tag,
-                                    });
-                                }}
+                               onPress={async () => {
+
+  if (!house) return;
+if (tag === "Other" && !customTag.trim()) {
+  Toast.show({
+    type: "info",
+    text1: "Missing Field",
+    text2: "Please enter place name",
+  });
+  return;
+}
+
+  const payload = {
+    userId: user?.userId,
+    fullAddress: address,
+    landmark,
+    type: tag === "Other" ? "Other" : tag,
+    flatNumber:house,
+    other:customTag,
+    city: "",
+    state: "",
+    pincode: "",
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+    isDefault: false,
+  };
+
+  const res = await saveAddress(payload);
+
+  if (!res.success) {
+    Toast.show({
+  type: "error",
+  text1: "Save Failed",
+  text2: res.message || "Something went wrong",
+});
+    return;
+  }
+
+ Toast.show({
+  type: "success",
+  text1: "Address Saved",
+  text2: "Your address has been added successfully",
+});
+
+  navigation.goBack();
+}}
                             >
                                 <Text style={{ color: "#fff" }}>Save Address</Text>
                             </TouchableOpacity>
