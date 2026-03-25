@@ -1,6 +1,7 @@
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import {
+    Image,
     Platform,
     ScrollView,
     StyleSheet,
@@ -8,11 +9,9 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ServizoDropdown from "../components/ServizoDropdown";
 import ServizoInput from "../components/ServizoInput";
-
 import { COLORS } from "../utils/constants";
 
 export default function AddAddressMap({ navigation }) {
@@ -24,6 +23,7 @@ export default function AddAddressMap({ navigation }) {
     const [house, setHouse] = useState("");
     const [landmark, setLandmark] = useState("");
     const [tag, setTag] = useState("Home");
+    const [customTag, setCustomTag] = useState("");
 
     const getAddressFromCoords = async (coords) => {
         try {
@@ -94,159 +94,144 @@ export default function AddAddressMap({ navigation }) {
     const MapView = Maps.default;
 
     return (
-  <SafeAreaView style={styles.safeArea}>
-    <View style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
 
-      {/* 🔴 MAP SECTION (75%) */}
-      <View style={styles.mapContainer}>
+                
+                <View style={styles.mapContainer}>
 
-        {/* Search Bar */}
-        <View style={styles.searchWrapper}>
-          <GooglePlacesAutocomplete
-            placeholder="Search location"
-            fetchDetails={true}
-            enablePoweredByContainer={false}
-            keyboardShouldPersistTaps="handled"
-            onPress={(data, details = null) => {
-              if (!details) return;
+                    <TouchableOpacity style={styles.logoBtn}>
+                        <Image
+                            source={require("../../assets/images/icon1.png")} 
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
 
-              const loc = details.geometry.location;
 
-              const coords = {
-                latitude: loc.lat,
-                longitude: loc.lng,
-              };
 
-              setLocation(coords);
-              setAddress(details.formatted_address);
+                    
+                    <TouchableOpacity
+                        style={styles.closeBtn}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Text style={styles.closeText}>✕</Text>
+                    </TouchableOpacity>
 
-              mapRef.current?.animateToRegion({
-                ...coords,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              });
-            }}
-            query={{
-              key: "YOUR_API_KEY",
-              language: "en",
-            }}
-            styles={{
-              textInput: {
-                height: 45,
-                borderRadius: 8,
-                paddingHorizontal: 10,
-                backgroundColor: "#fff",
-              },
-              listView: {
-                backgroundColor: "#fff",
-                position: "absolute",
-                top: 50,
-                zIndex: 9999,
-                elevation: 10,
-              },
-            }}
-          />
-        </View>
+                    <TouchableOpacity
+                        style={styles.currentLocationBtn}
+                        onPress={getCurrentLocation}
+                    >
+                        <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
+                    </TouchableOpacity>
 
-        {/* Close Button */}
-        <TouchableOpacity
-          style={styles.closeBtn}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.closeText}>✕</Text>
-        </TouchableOpacity>
+                    
+                    <MapView
+                        ref={mapRef}
+                        style={styles.map}
+                        initialRegion={{
+                            latitude: location?.latitude || 28.6139,
+                            longitude: location?.longitude || 77.2090,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                        }}
+                        onRegionChangeComplete={(region) => {
+                            const coords = {
+                                latitude: region.latitude,
+                                longitude: region.longitude,
+                            };
 
-        {/* Map */}
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={{
-            latitude: location?.latitude || 28.6139,
-            longitude: location?.longitude || 77.2090,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-          onRegionChangeComplete={(region) => {
-            const coords = {
-              latitude: region.latitude,
-              longitude: region.longitude,
-            };
+                            setLocation(coords);
+                            getAddressFromCoords(coords);
+                        }}
+                    />
 
-            setLocation(coords);
-            getAddressFromCoords(coords);
-          }}
-        />
+                    
+                    <View style={styles.markerFixed}>
+                        <Text style={{ fontSize: 30 }}>📍</Text>
+                    </View>
 
-        {/* Marker */}
-        <View style={styles.markerFixed}>
-          <Text style={{ fontSize: 30 }}>📍</Text>
-        </View>
+                </View>
 
-      </View>
+                
+                <View style={styles.formContainer}>
+                    <ScrollView showsVerticalScrollIndicator={false}>
 
-      {/* 🟢 FORM SECTION (25%) */}
-      <View style={styles.formContainer}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+                        <View style={styles.formCard}>
 
-          <View style={styles.formCard}>
+                            <Text style={styles.title}>Selected Location</Text>
 
-            <Text style={styles.title}>Selected Location</Text>
+                            <Text style={styles.address}>
+                                {loading ? "Fetching..." : address}
+                            </Text>
 
-            <Text style={styles.address}>
-              {loading ? "Fetching..." : address}
-            </Text>
+                            <ServizoInput
+                                label="House / Flat Number"
+                                placeholder="Enter house number"
+                                icon="home-outline"
+                                value={house}
+                                onChangeText={setHouse}
+                            />
 
-            <ServizoInput
-              label="House / Flat Number"
-              placeholder="Enter house number"
-              icon="home-outline"
-              value={house}
-              onChangeText={setHouse}
-            />
+                            <ServizoInput
+                                label="Landmark"
+                                placeholder="Enter landmark"
+                                icon="location-outline"
+                                value={landmark}
+                                onChangeText={setLandmark}
+                            />
 
-            <ServizoInput
-              label="Landmark"
-              placeholder="Enter landmark"
-              icon="location-outline"
-              value={landmark}
-              onChangeText={setLandmark}
-            />
+                            <ServizoDropdown
+                                label="Save as"
+                                icon="bookmark-outline"
+                                data={["Home", "Other"]}
+                                value={tag}
+                                onSelect={(value) => {
+                                    setTag(value);
 
-            <ServizoDropdown
-              label="Save as"
-              icon="bookmark-outline"
-              data={["Home", "Other"]}
-              value={tag}
-              onSelect={setTag}
-            />
+                                    if (value !== "Other") {
+                                        setCustomTag(""); 
+                                    }
+                                }}
+                            />
 
-            <TouchableOpacity
-              style={[
-                styles.saveBtn,
-                { opacity: house ? 1 : 0.5 }
-              ]}
-              disabled={!house}
-              onPress={() => {
-                navigation.navigate("EditProfile", {
-                  selectedAddress: address,
-                  coordinates: location,
-                  house,
-                  landmark,
-                  tag,
-                });
-              }}
-            >
-              <Text style={{ color: "#fff" }}>Save Address</Text>
-            </TouchableOpacity>
+                            {tag === "Other" && (
+                                <ServizoInput
+                                    label="Enter Place Name"
+                                    placeholder="e.g. Office, Gym, Friend's Home"
+                                    icon="create-outline"
+                                    value={customTag}
+                                    onChangeText={setCustomTag}
+                                />
+                            )}
 
-          </View>
+                            <TouchableOpacity
+                                style={[
+                                    styles.saveBtn,
+                                    { opacity: house ? 1 : 0.5 }
+                                ]}
+                                disabled={!house}
+                                onPress={() => {
+                                    navigation.navigate("EditProfile", {
+                                        selectedAddress: address,
+                                        coordinates: location,
+                                        house,
+                                        landmark,
+                                        tag,
+                                    });
+                                }}
+                            >
+                                <Text style={{ color: "#fff" }}>Save Address</Text>
+                            </TouchableOpacity>
 
-        </ScrollView>
-      </View>
+                        </View>
 
-    </View>
-  </SafeAreaView>
-);
+                    </ScrollView>
+                </View>
+
+            </View>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -368,80 +353,133 @@ const styles = StyleSheet.create({
 
     saveBtn: {
         marginTop: 15,
-       backgroundColor: COLORS.primary,
+        backgroundColor: COLORS.primary,
         padding: 14,
         borderRadius: 10,
         alignItems: "center",
     },
 
     formCard: {
-  backgroundColor: COLORS.background2,
-  borderRadius: 20,
-  padding: 20,
+        backgroundColor: COLORS.background2,
+        borderRadius: 20,
+        padding: 20,
 
-  shadowColor: "#000",
-  shadowOpacity: 0.08,
-  shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 5,
-  elevation: 3,
-},
+        shadowColor: "#000",
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 5,
+        elevation: 3,
+    },
 
-closeBtn: {
-  position: "absolute",
-  top: 10, // earlier was 50 → now reduce
-  right: 20,
-  zIndex: 9999,
-  elevation: 10,
-  backgroundColor: "#fff",
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  justifyContent: "center",
-  alignItems: "center",
+    closeBtn: {
+        position: "absolute",
+        top: 10,
+        right: 20,
+        zIndex: 9999,
+        elevation: 10,
 
-  shadowColor: "#000",
-  shadowOpacity: 0.1,
-  shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 4,
-},
+        backgroundColor: "rgba(0, 0, 0, 0.25)", // 👈 glass effect
+        width: 42,
+        height: 42,
+        borderRadius: 21,
 
-closeText: {
-  fontSize: 20,
-  fontWeight: "bold",
-  color: "#333",
-},
-safeArea: {
-  flex: 1,
-  backgroundColor: "#fff", // match your app background
-},
+        justifyContent: "center",
+        alignItems: "center",
 
-container: {
-  flex: 1,
-},
+        borderWidth: 5,
+        borderColor: "rgba(0, 0, 0, 0.4)",
 
-mapContainer: {
-  flex: 3, // 75%
-},
+        shadowColor: "#000",
+        shadowOpacity: 0.2,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 6,
+    },
 
-formContainer: {
-  flex: 1, // 25%
-  backgroundColor: "#fff",
-  borderTopLeftRadius: 20,
-  borderTopRightRadius: 20,
-  paddingHorizontal: 15,
-  paddingTop: 10,
-},
+    closeText: {
+        fontSize: 23,
+        fontWeight: "bold",
+        color: "#0f1010", 
+    },
+    safeArea: {
+        flex: 1,
+        backgroundColor: "#fff", 
+    },
 
-map: {
-  flex: 1,
-},
+    container: {
+        flex: 1,
+    },
 
-searchWrapper: {
-  position: "absolute",
-  top: 10,
-  left: 10,
-  right: 10,
-  zIndex: 9999,
-  elevation: 10,
-},
+    mapContainer: {
+        flex: 7, 
+    },
+
+    formContainer: {
+        flex: 4, 
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingHorizontal: 15,
+        paddingTop: 10,
+    },
+
+    currentLocationBtn: {
+        position: "absolute",
+        top: 60,
+        alignSelf: "center",
+        zIndex: 9999,
+        elevation: 10,
+
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 20,
+
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+    },
+
+    currentLocationText: {
+        color: "#fff",
+        fontWeight: "600",
+        fontSize: 13,
+    },
+
+    map: {
+        flex: 1,
+    },
+
+    searchWrapper: {
+        position: "absolute",
+        top: 10,
+        left: 10,
+        right: 10,
+        zIndex: 9999,
+        elevation: 10,
+    },
+
+    logoBtn: {
+        position: "absolute",
+        top: 10,
+        left: 20,
+        zIndex: 9999,
+        elevation: 10,
+
+        backgroundColor: "rgba(255,255,255,0.25)",
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+
+        justifyContent: "center",
+        alignItems: "center",
+
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.4)",
+    },
+
+    logo: {
+        width: 40,
+        height: 40,
+    },
 });
