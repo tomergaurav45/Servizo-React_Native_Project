@@ -11,4 +11,8 @@ export const AUTH_ENDPOINTS = {
   FORGOT_PASSWORD_EMAIL: `${BASE_URL}/forgot-password/send-otp`,
   FORGOT_PASSWORD_RESET: `${BASE_URL}/forgot-password/reset`,
   WELCOME_MAIL: `${BASE_URL}/send-welcome-mail`,
+  SAVE_ADDRESSES: `${BASE_URL}/save-adresses`,
+  GET_ADDRESSES: `${BASE_URL}/save-adresses`,
+  UPDATE_ADDRESSES: `${BASE_URL}/update-address`,
+  DELETE_ADDRESSES: `${BASE_URL}/delete-address`,
 };

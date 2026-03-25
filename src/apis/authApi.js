@@ -188,3 +188,109 @@ export const loginUser = async (email, password) => {
     };
   }
 };
+
+export const saveAddress = async (payload) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.SAVE_ADDRESSES, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to save address",
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while saving address",
+    };
+  }
+};
+
+export const getAddresses = async (userId) => {
+  try {
+    const response = await fetch(
+      `${AUTH_ENDPOINTS.GET_ADDRESSES}/${userId}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to fetch addresses",
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while fetching addresses",
+    };
+  }
+};
+
+export const updateAddress = async (payload) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.UPDATE_ADDRESSES, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to update address",
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while updating address",
+    };
+  }
+};
+
+export const deleteAddress = async (payload) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.DELETE_ADDRESSES, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to delete address",
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while deleting address",
+    };
+  }
+};
