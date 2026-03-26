@@ -69,18 +69,18 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.divider} />
 
         {/* Actions */}
-       <TouchableOpacity
-  style={styles.option}
-  onPress={() => navigation.navigate("EditProfileScreen")}
->
+        <TouchableOpacity
+          style={styles.option}
+          onPress={() => navigation.navigate("EditProfileScreen")}
+        >
           <Ionicons name="person-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Edit Profile</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-  style={styles.option}
-  onPress={() => navigation.navigate("ManageAddressScreen")}
->
+          style={styles.option}
+          onPress={() => navigation.navigate("ManageAddressScreen")}
+        >
           <Ionicons name="location-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Manage Address</Text>
         </TouchableOpacity>

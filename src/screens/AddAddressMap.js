@@ -100,12 +100,12 @@ export default function AddAddressMap({ navigation }) {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
 
-                
+
                 <View style={styles.mapContainer}>
 
                     <TouchableOpacity style={styles.logoBtn}>
                         <Image
-                            source={require("../../assets/images/icon1.png")} 
+                            source={require("../../assets/images/icon1.png")}
                             style={styles.logo}
                             resizeMode="contain"
                         />
@@ -113,7 +113,7 @@ export default function AddAddressMap({ navigation }) {
 
 
 
-                    
+
                     <TouchableOpacity
                         style={styles.closeBtn}
                         onPress={() => navigation.goBack()}
@@ -128,7 +128,7 @@ export default function AddAddressMap({ navigation }) {
                         <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
                     </TouchableOpacity>
 
-                    
+
                     <MapView
                         ref={mapRef}
                         style={styles.map}
@@ -149,14 +149,14 @@ export default function AddAddressMap({ navigation }) {
                         }}
                     />
 
-                    
+
                     <View style={styles.markerFixed}>
                         <Text style={{ fontSize: 30 }}>📍</Text>
                     </View>
 
                 </View>
 
-                
+
                 <View style={styles.formContainer}>
                     <ScrollView showsVerticalScrollIndicator={false}>
 
@@ -193,7 +193,7 @@ export default function AddAddressMap({ navigation }) {
                                     setTag(value);
 
                                     if (value !== "Other") {
-                                        setCustomTag(""); 
+                                        setCustomTag("");
                                     }
                                 }}
                             />
@@ -214,52 +214,52 @@ export default function AddAddressMap({ navigation }) {
                                     { opacity: house ? 1 : 0.5 }
                                 ]}
                                 disabled={!house}
-                               onPress={async () => {
+                                onPress={async () => {
 
-  if (!house) return;
-if (tag === "Other" && !customTag.trim()) {
-  Toast.show({
-    type: "info",
-    text1: "Missing Field",
-    text2: "Please enter place name",
-  });
-  return;
-}
+                                    if (!house) return;
+                                    if (tag === "Other" && !customTag.trim()) {
+                                        Toast.show({
+                                            type: "info",
+                                            text1: "Missing Field",
+                                            text2: "Please enter place name",
+                                        });
+                                        return;
+                                    }
 
-  const payload = {
-    userId: user?.userId,
-    fullAddress: address,
-    landmark,
-    type: tag === "Other" ? "Other" : tag,
-    flatNumber:house,
-    other:customTag,
-    city: "",
-    state: "",
-    pincode: "",
-    latitude: location?.latitude,
-    longitude: location?.longitude,
-    isDefault: false,
-  };
+                                    const payload = {
+                                        userId: user?.userId,
+                                        fullAddress: address,
+                                        landmark,
+                                        type: tag === "Other" ? "Other" : tag,
+                                        flatNumber: house,
+                                        other: customTag,
+                                        city: "",
+                                        state: "",
+                                        pincode: "",
+                                        latitude: location?.latitude,
+                                        longitude: location?.longitude,
+                                        isDefault: false,
+                                    };
 
-  const res = await saveAddress(payload);
+                                    const res = await saveAddress(payload);
 
-  if (!res.success) {
-    Toast.show({
-  type: "error",
-  text1: "Save Failed",
-  text2: res.message || "Something went wrong",
-});
-    return;
-  }
+                                    if (!res.success) {
+                                        Toast.show({
+                                            type: "error",
+                                            text1: "Save Failed",
+                                            text2: res.message || "Something went wrong",
+                                        });
+                                        return;
+                                    }
 
- Toast.show({
-  type: "success",
-  text1: "Address Saved",
-  text2: "Your address has been added successfully",
-});
+                                    Toast.show({
+                                        type: "success",
+                                        text1: "Address Saved",
+                                        text2: "Your address has been added successfully",
+                                    });
 
-  navigation.goBack();
-}}
+                                    navigation.goBack();
+                                }}
                             >
                                 <Text style={{ color: "#fff" }}>Save Address</Text>
                             </TouchableOpacity>
@@ -438,11 +438,11 @@ const styles = StyleSheet.create({
     closeText: {
         fontSize: 23,
         fontWeight: "bold",
-        color: "#0f1010", 
+        color: "#0f1010",
     },
     safeArea: {
         flex: 1,
-        backgroundColor: "#fff", 
+        backgroundColor: "#fff",
     },
 
     container: {
@@ -450,11 +450,11 @@ const styles = StyleSheet.create({
     },
 
     mapContainer: {
-        flex: 7, 
+        flex: 7,
     },
 
     formContainer: {
-        flex: 4, 
+        flex: 4,
         backgroundColor: "#fff",
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,

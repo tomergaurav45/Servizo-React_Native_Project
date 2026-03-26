@@ -30,164 +30,164 @@ export default function HomeScreen() {
 
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("");
- const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
 
-useEffect(() => {
-  (async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      alert("Permission to access location was denied");
-      return;
-    }
-
-    let loc = await Location.getCurrentPositionAsync({});
-    setLocation(loc.coords);
-
-    const addr = await Location.reverseGeocodeAsync({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-    });
-
-    if (addr.length > 0) {
-      setAddress(`${addr[0].city}, ${addr[0].region}`);
-    }
-  })();
-}, []);
-
-useEffect(() => {
-  if (user && !user.role) {
-    setShowRoleModal(true);
-  } else {
-    setShowRoleModal(false);
-  }
-}, [user]);
-
-const selectRole = async (role) => {
-  try {
-
-    const response = await registerUser({
-      userId: user.userId,
-      role: role
-    });
-
-    if (response.success) {
-
-     updateRole(role);
-
-      setShowRoleModal(false);
-
-      if (role === "customer") {
-        Toast.show({
-          type: "success",
-          text1: "Congratulations 🎉",
-          text2: "You can now find trusted services on Servizo",
-        });
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access location was denied");
+        return;
       }
 
-      if (role === "provider") {
-        Toast.show({
-          type: "success",
-          text1: "Congratulations 🎉",
-          text2: "You can now offer services and earn with Servizo",
-        });
-      }
+      let loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc.coords);
 
+      const addr = await Location.reverseGeocodeAsync({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+
+      if (addr.length > 0) {
+        setAddress(`${addr[0].city}, ${addr[0].region}`);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (user && !user.role) {
+      setShowRoleModal(true);
     } else {
+      setShowRoleModal(false);
+    }
+  }, [user]);
+
+  const selectRole = async (role) => {
+    try {
+
+      const response = await registerUser({
+        userId: user.userId,
+        role: role
+      });
+
+      if (response.success) {
+
+        updateRole(role);
+
+        setShowRoleModal(false);
+
+        if (role === "customer") {
+          Toast.show({
+            type: "success",
+            text1: "Congratulations 🎉",
+            text2: "You can now find trusted services on Servizo",
+          });
+        }
+
+        if (role === "provider") {
+          Toast.show({
+            type: "success",
+            text1: "Congratulations 🎉",
+            text2: "You can now offer services and earn with Servizo",
+          });
+        }
+
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: response.message || "Role update failed",
+        });
+      }
+
+    } catch (error) {
+
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: response.message || "Role update failed",
+        text1: "Server Error",
+        text2: "Unable to update role",
       });
+
     }
-
-  } catch (error) {
-
-    Toast.show({
-      type: "error",
-      text1: "Server Error",
-      text2: "Unable to update role",
-    });
-
-  }
-};
+  };
 
 
 
   return (
 
-    
-    
+
+
     <SafeAreaView style={styles.safeArea}>
-     <Modal visible={showRoleModal} transparent animationType="fade">
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalCard}>
+      <Modal visible={showRoleModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
 
-      <View style={styles.modalHeader}>
-        <Image
-          source={require("../../assets/images/icon1.png")}
-          style={styles.modalIcon}
-        />
-        <Text style={styles.modalTitle}>
-          Welcome to Servizo
-        </Text>
-      </View>
+            <View style={styles.modalHeader}>
+              <Image
+                source={require("../../assets/images/icon1.png")}
+                style={styles.modalIcon}
+              />
+              <Text style={styles.modalTitle}>
+                Welcome to Servizo
+              </Text>
+            </View>
 
-      <Text style={styles.modalSubtitle}>
-        How do you want to use Servizo?
-      </Text>
+            <Text style={styles.modalSubtitle}>
+              How do you want to use Servizo?
+            </Text>
 
-      {/* Find Services */}
-      <TouchableOpacity
-        style={styles.roleCard}
-        onPress={() => selectRole("customer")}
-      >
-        <Ionicons name="search-outline" size={24} color={COLORS.primary} />
-        <View style={{ marginLeft: 10 }}>
-          <Text style={styles.roleTitle}>Find Services</Text>
-          <Text style={styles.roleSubtitle}>
-            Book trusted professionals
-          </Text>
+            {/* Find Services */}
+            <TouchableOpacity
+              style={styles.roleCard}
+              onPress={() => selectRole("customer")}
+            >
+              <Ionicons name="search-outline" size={24} color={COLORS.primary} />
+              <View style={{ marginLeft: 10 }}>
+                <Text style={styles.roleTitle}>Find Services</Text>
+                <Text style={styles.roleSubtitle}>
+                  Book trusted professionals
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Offer Services */}
+            <TouchableOpacity
+              style={styles.roleCard}
+              onPress={() => selectRole("provider")}
+            >
+              <Ionicons name="briefcase-outline" size={24} color={COLORS.primary} />
+              <View style={{ marginLeft: 10 }}>
+                <Text style={styles.roleTitle}>Offer Services</Text>
+                <Text style={styles.roleSubtitle}>
+                  Earn money with your skills
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+          </View>
         </View>
-      </TouchableOpacity>
-
-      {/* Offer Services */}
-      <TouchableOpacity
-        style={styles.roleCard}
-        onPress={() => selectRole("provider")}
-      >
-        <Ionicons name="briefcase-outline" size={24} color={COLORS.primary} />
-        <View style={{ marginLeft: 10 }}>
-          <Text style={styles.roleTitle}>Offer Services</Text>
-          <Text style={styles.roleSubtitle}>
-            Earn money with your skills
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-    </View>
-  </View>
-</Modal>
+      </Modal>
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-      <TouchableOpacity style={styles.locationBar}>
-  <Ionicons name="location-outline" size={20} color={COLORS.primary} />
+        <TouchableOpacity style={styles.locationBar}>
+          <Ionicons name="location-outline" size={20} color={COLORS.primary} />
 
-  <View style={{ marginLeft: 8 }}>
-    <Text style={styles.locationLabel}>Your Location</Text>
-    <Text style={styles.locationText}>
-      {address || "Detecting location..."}
-    </Text>
-  </View>
+          <View style={{ marginLeft: 8 }}>
+            <Text style={styles.locationLabel}>Your Location</Text>
+            <Text style={styles.locationText}>
+              {address || "Detecting location..."}
+            </Text>
+          </View>
 
-  <Ionicons
-    name="chevron-forward-outline"
-    size={18}
-    color="#999"
-    style={{ marginLeft: "auto" }}
-  />
-</TouchableOpacity>
+          <Ionicons
+            name="chevron-forward-outline"
+            size={18}
+            color="#999"
+            style={{ marginLeft: "auto" }}
+          />
+        </TouchableOpacity>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.greeting}>Hi</Text>
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 16,
-    paddingBottom: 100, 
+    paddingBottom: 100,
   },
   header: {
     marginBottom: 15,
@@ -307,95 +307,95 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   map: {
-  width: "100%",
-  height: 200,
-  borderRadius: 15,
-  marginBottom: 15,
-},
-locationBar: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#f5f5f5",
-  padding: 14,
-  borderRadius: 12,
-  marginBottom: 15,
-},
+    width: "100%",
+    height: 200,
+    borderRadius: 15,
+    marginBottom: 15,
+  },
+  locationBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 15,
+  },
 
-locationLabel: {
-  fontSize: 12,
-  color: "#777",
-},
+  locationLabel: {
+    fontSize: 12,
+    color: "#777",
+  },
 
-locationText: {
-  fontSize: 14,
-  fontWeight: "600",
-  color: COLORS.textDark,
-},
-modalOverlay: {
-  flex: 1,
-  backgroundColor: "rgba(0,0,0,0.4)",
-  justifyContent: "center",
-  alignItems: "center",
-},
+  locationText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.textDark,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-modalCard: {
-  width: "85%",
-  backgroundColor: "#E8F5E9",
-  borderRadius: 16,
-  padding: 20,
-  borderLeftWidth: 6,
-  borderLeftColor: COLORS.primary,
-  shadowColor: "#000",
-  shadowOpacity: 0.2,
-  shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 5,
-  elevation: 6,
-},
+  modalCard: {
+    width: "85%",
+    backgroundColor: "#E8F5E9",
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 6,
+    borderLeftColor: COLORS.primary,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 6,
+  },
 
-modalHeader: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "center",
-  marginBottom: 10,
-},
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
 
-modalIcon: {
-  width: 70,
-  height: 70,
-  marginRight: 8,
-},
+  modalIcon: {
+    width: 70,
+    height: 70,
+    marginRight: 8,
+  },
 
-modalTitle: {
-  fontSize: 18,
-  fontWeight: "bold",
-  color: COLORS.primary,
-},
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
 
-modalSubtitle: {
-  textAlign: "center",
-  marginBottom: 20,
-  color: "#555",
-  fontWeight: "bold"
-},
+  modalSubtitle: {
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#555",
+    fontWeight: "bold"
+  },
 
-roleCard: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#F9F9F9",
-  padding: 16,
-  borderRadius: 12,
-  marginBottom: 12,
-},
+  roleCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9F9F9",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
 
-roleTitle: {
-  fontSize: 16,
-  fontWeight: "bold",
-},
+  roleTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 
-roleSubtitle: {
-  fontSize: 13,
-  color: "#666",
-},
+  roleSubtitle: {
+    fontSize: 13,
+    color: "#666",
+  },
 });
 
 
