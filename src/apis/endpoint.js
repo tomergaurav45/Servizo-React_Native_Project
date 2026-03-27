@@ -1,6 +1,6 @@
 //export const BASE_URL = "http://192.168.1.12:5000/api";
-//export const BASE_URL = "http://192.168.31.62:5000/api";
-export const BASE_URL = "http://192.168.1.101:5000/api";
+export const BASE_URL = "http://192.168.31.62:5000/api";
+//export const BASE_URL = "http://192.168.1.101:5000/api";
 
 
 export const AUTH_ENDPOINTS = {

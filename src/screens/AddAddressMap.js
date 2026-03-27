@@ -74,11 +74,14 @@ export default function AddAddressMap({ navigation }) {
         setLocation(coords);
         getAddressFromCoords(coords);
 
+
+if (Platform.OS !== "web" && mapRef.current) {
         mapRef.current?.animateToRegion({
             ...coords,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
         });
+    }
     };
 
     useEffect(() => {
@@ -93,9 +96,12 @@ export default function AddAddressMap({ navigation }) {
         );
     }
 
-    const Maps = require("react-native-maps");
-    const MapView = Maps.default;
+   let MapView;
 
+if (Platform.OS !== "web") {
+    const Maps = require("react-native-maps");
+    MapView = Maps.default;
+}
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
@@ -128,7 +134,7 @@ export default function AddAddressMap({ navigation }) {
                         <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
                     </TouchableOpacity>
 
-
+              {Platform.OS !== "web" && MapView && (
                     <MapView
                         ref={mapRef}
                         style={styles.map}
@@ -148,6 +154,7 @@ export default function AddAddressMap({ navigation }) {
                             getAddressFromCoords(coords);
                         }}
                     />
+                    )}
 
 
                     <View style={styles.markerFixed}>
