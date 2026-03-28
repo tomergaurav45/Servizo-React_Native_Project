@@ -1,11 +1,10 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
-
 import { ServizoToast } from "./src/components/ServizoToast";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
-
 import BottomTabs from "./src/navigation/BottomTabs";
+import ActivityScreen from "./src/screens/ActivityScreen";
 import AddAddressMap from "./src/screens/AddAddressMap";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
@@ -29,14 +28,18 @@ function AppNavigator() {
         <>
           <Stack.Screen name="MainTabs" component={BottomTabs} />
           <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-           <Stack.Screen
-  name="ManageAddressScreen"
-  component={ManageAddressScreen}
-/>
-<Stack.Screen
-  name="AddAddressMap"
-  component={AddAddressMap}
-/>
+          <Stack.Screen
+            name="ManageAddressScreen"
+            component={ManageAddressScreen}
+          />
+          <Stack.Screen
+            name="AddAddressMap"
+            component={AddAddressMap}
+          />
+          <Stack.Screen
+            name="ActivityScreen"
+            component={ActivityScreen}
+          />
         </>
       ) : (
         <>
@@ -46,9 +49,9 @@ function AppNavigator() {
             name="ForgotPasswordScreen"
             component={ForgotPasswordScreen}
           />
-         
+
         </>
-        
+
       )}
     </Stack.Navigator>
   );

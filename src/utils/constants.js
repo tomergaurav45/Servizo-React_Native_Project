@@ -13,6 +13,7 @@ export const COLORS = {
   background2: "#D8F7F2"
 };
 
+
 export const SIZES = {
   small: 8,
   medium: 16,

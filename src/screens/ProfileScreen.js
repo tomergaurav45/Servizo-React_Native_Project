@@ -85,6 +85,13 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.optionText}>Manage Address</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.option}
+        onPress={() => navigation.navigate("ActivityScreen")}
+        >
+          <Ionicons name="flask-outline"  size={20} color={COLORS.primary} />
+          <Text style={styles.optionText}>My Activites</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.option}>
           <Ionicons name="help-circle-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Help & Support</Text>
