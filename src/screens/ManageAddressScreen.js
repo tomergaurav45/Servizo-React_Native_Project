@@ -104,8 +104,6 @@ export default function ManageAddressScreen() {
 
     <SafeAreaView style={styles.container}>
       <View style={styles.formCard}>
-
-
         <ServizoBackButton />
 
 
