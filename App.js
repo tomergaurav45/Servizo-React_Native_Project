@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import BottomTabs from "./src/navigation/BottomTabs";
 import ActivityScreen from "./src/screens/ActivityScreen";
 import AddAddressMap from "./src/screens/AddAddressMap";
+import ChangePassword from "./src/screens/ChangePassword";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import LoginScreen from "./src/screens/LoginScreen";
@@ -39,6 +40,10 @@ function AppNavigator() {
           <Stack.Screen
             name="ActivityScreen"
             component={ActivityScreen}
+          />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePassword}
           />
         </>
       ) : (

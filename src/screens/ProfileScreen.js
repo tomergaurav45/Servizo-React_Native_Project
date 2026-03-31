@@ -86,10 +86,18 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option}
-        onPress={() => navigation.navigate("ActivityScreen")}
+          onPress={() => navigation.navigate("ActivityScreen")}
         >
-          <Ionicons name="flask-outline"  size={20} color={COLORS.primary} />
+          <Ionicons name="flask-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>My Activites</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.option}
+        onPress={() => navigation.navigate("ChangePassword")}
+        >
+          
+          <Ionicons name="help-circle-outline" size={20} color={COLORS.primary} />
+          <Text style={styles.optionText}>Change Your Password</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option}>
