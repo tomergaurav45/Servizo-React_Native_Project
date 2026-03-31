@@ -1,10 +1,13 @@
+import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import { changePassword } from "../apis/authApi";
 import { ServizoAlert } from "../components/ServizoAlert";
 import ServizoBackButton from "../components/ServizoBackButton";
 import ServizoInput from "../components/ServizoInput";
+import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
 const ChangePassword = () => {
@@ -13,6 +16,9 @@ const ChangePassword = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
+
+    const navigation = useNavigation();
+    const { user } = useAuth();
 
     const handleUpdatePassword = () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
@@ -42,21 +48,48 @@ const ChangePassword = () => {
             return;
         }
 
-        // ✅ Show confirmation alert
+
         setAlertMessage("Are you sure you want to update password?");
         setShowAlert(true);
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         setShowAlert(false);
 
-        // 👉 API call here
+        try {
+            const response = await changePassword({
+                userId: user?.userId,
+                currentPassword,
+                newPassword,
+                confirmPassword,
+            });
 
-        Toast.show({
-            type: "success",
-            text1: "Success",
-            text2: "Password updated successfully",
-        });
+            if (!response.success) {
+                Toast.show({
+                    type: "error",
+                    text1: "Error",
+                    text2: response.message,
+                });
+                return;
+            }
+
+            Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Password updated successfully",
+            });
+
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            navigation.goBack();
+        } catch (error) {
+            Toast.show({
+                type: "error",
+                text1: "Network Error",
+                text2: "Something went wrong. Try again.",
+            });
+        }
     };
 
     const handleCancel = () => {

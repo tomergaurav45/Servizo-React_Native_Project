@@ -294,3 +294,40 @@ export const deleteAddress = async (payload) => {
     };
   }
 };
+
+export const changePassword = async ({
+  userId,
+  currentPassword,
+  newPassword,
+  confirmPassword,
+}) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.CHANGE_PASSWORD, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Password change failed",
+      };
+    }
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while changing password",
+    };
+  }
+};
+
