@@ -27,14 +27,29 @@ const HelpSupportScreen = () => {
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
+  const [openIndex, setOpenIndex] = useState(null);
 
   const faqs = [
-    "How to book a service?",
-    "How to cancel a request?",
-    "How to contact provider?",
+    {
+      question: "How to book a service?",
+      answer: "Go to home → select service → choose provider → confirm booking.",
+    },
+    {
+      question: "How to cancel a request?",
+      answer: "Go to My Activity → open your request → click cancel.",
+    },
+    {
+      question: "How to contact provider?",
+      answer: "Open your booking → use call or chat option.",
+    },
   ];
 
+  const filteredFaqs = faqs.filter(item =>
+    item.question.toLowerCase().includes(search.toLowerCase())
+  );
+
   const { user } = useAuth();
+
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -129,12 +144,37 @@ const HelpSupportScreen = () => {
 
           <Text style={styles.sectionTitle}>FAQs</Text>
 
-          {faqs.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.faqItem}>
-              <Text style={styles.faqText}>{item}</Text>
-              <Ionicons name="chevron-forward" size={16} color="#999" />
-            </TouchableOpacity>
+          {filteredFaqs.map((item, index) => (
+            <View key={index} style={styles.faqContainer}>
+
+              <TouchableOpacity
+                style={styles.faqItem}
+                onPress={() =>
+                  setOpenIndex(openIndex === index ? null : index)
+                }
+              >
+                <Text style={styles.faqText}>{item.question}</Text>
+                <Ionicons
+                  name={openIndex === index ? "chevron-up" : "chevron-forward"}
+                  size={16}
+                  color="#999"
+                />
+              </TouchableOpacity>
+
+              {openIndex === index && (
+                <View style={styles.faqAnswerBox}>
+                  <Text style={styles.faqAnswer}>{item.answer}</Text>
+                </View>
+              )}
+
+            </View>
           ))}
+
+          {filteredFaqs.length === 0 && (
+            <Text style={{ textAlign: "center", color: "#999", marginTop: 10 }}>
+              No results found
+            </Text>
+          )}
 
           {/* CONTACT SUPPORT */}
           <Text style={styles.sectionTitle}>Contact Support</Text>
@@ -411,6 +451,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#222",
+  },
+  faqContainer: {
+    marginBottom: 8,
+  },
+
+  faqAnswerBox: {
+    backgroundColor: "#f9f9f9",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 5,
+  },
+
+  faqAnswer: {
+    fontSize: 13,
+    color: "#555",
   },
 
   modalPrice: {
