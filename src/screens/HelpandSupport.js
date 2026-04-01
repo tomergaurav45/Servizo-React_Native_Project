@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
   Image,
@@ -12,20 +13,87 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import Toast from "react-native-toast-message";
+import { createIssue } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
+import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
 const HelpSupportScreen = () => {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
+  const [issueType, setIssueType] = useState("");
+  const [subject, setSubject] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState(null);
 
   const faqs = [
     "How to book a service?",
     "How to cancel a request?",
     "How to contact provider?",
   ];
+
+  const { user } = useAuth();
+
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      alert("Permission required to access gallery");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSubmitIssue = async () => {
+    if (!issueType || !subject || !description) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    try {
+      const payload = {
+        userId: user?.userId, // fallback for testing
+        issueType,
+        subject,
+        description,
+        url: image || "", // from image picker
+      };
+
+      const res = await createIssue(payload);
+
+      console.log("Issue Created:", res);
+
+      Toast.show({
+        type: "success",
+        text1: "Issue Submitted",
+        text2: "Our team will resolve it soon 🚀",
+      });
+
+      // reset form
+      setIssueType("");
+      setSubject("");
+      setDescription("");
+      setImage(null);
+
+      setShowModal(false);
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Submission Failed",
+        text2: error.message || "Something went wrong",
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -90,7 +158,13 @@ const HelpSupportScreen = () => {
           {/* REPORT ISSUE */}
           <Text style={styles.sectionTitle}>Report Issue</Text>
 
-          <TouchableOpacity style={styles.optionItem}>
+          <TouchableOpacity
+            style={styles.optionItem}
+            onPress={() => {
+              setModalType("issue");
+              setShowModal(true);
+            }}
+          >
             <Ionicons name="alert-circle-outline" size={18} color={COLORS.primary} />
             <Text style={styles.optionText}>Submit Issue Form</Text>
           </TouchableOpacity>
@@ -150,7 +224,9 @@ const HelpSupportScreen = () => {
                 <Text style={styles.modalTitle}>
                   {modalType === "terms"
                     ? "Terms & Conditions"
-                    : "Privacy Policy"}
+                    : modalType === "privacy"
+                      ? "Privacy Policy"
+                      : "Report an Issue"}
                 </Text>
 
                 <Text style={styles.modalSub}>
@@ -189,7 +265,7 @@ const HelpSupportScreen = () => {
                     <Text style={styles.sectionTitle}>Contact</Text>
                     <Text style={styles.modalText}>support@servizo.com</Text>
                   </View>
-                ) : (
+                ) : modalType === "privacy" ? (
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Data Collection</Text>
 
@@ -216,7 +292,53 @@ const HelpSupportScreen = () => {
                     <Text style={styles.sectionTitle}>Contact</Text>
                     <Text style={styles.modalText}>support@servizo.com</Text>
                   </View>
-                )}
+                ) : (
+
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Issue Type</Text>
+                    <TextInput
+                      placeholder="e.g. Payment Issue"
+                      value={issueType}
+                      onChangeText={setIssueType}
+                      style={styles.input}
+                    />
+
+                    <Text style={styles.sectionTitle}>Subject</Text>
+                    <TextInput
+                      placeholder="Enter subject"
+                      value={subject}
+                      onChangeText={setSubject}
+                      style={styles.input}
+                    />
+
+                    <Text style={styles.sectionTitle}>Description</Text>
+                    <TextInput
+                      placeholder="Describe your issue..."
+                      value={description}
+                      onChangeText={setDescription}
+                      style={[styles.input, { height: 100 }]}
+                      multiline
+                    />
+                    <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+                      <Ionicons name="image-outline" size={18} color={COLORS.primary} />
+                      <Text style={styles.uploadText}>
+                        {image ? "Change Screenshot" : "Upload Screenshot"}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {image && (
+                      <Image
+                        source={{ uri: image }}
+                        style={styles.previewImage}
+                      />
+                    )}
+
+                    <TouchableOpacity style={styles.submitBtn} onPress={handleSubmitIssue}>
+                      <Text style={styles.submitText}>Submit Issue</Text>
+                    </TouchableOpacity>
+                  </View>
+                )
+                }
               </ScrollView>
 
               {/* Close Button */}
@@ -273,7 +395,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end", 
+    justifyContent: "flex-end",
   },
 
   modalContainer: {
@@ -350,6 +472,28 @@ const styles = StyleSheet.create({
 
   faqText: {
     fontSize: 14,
+  },
+
+  uploadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#f1f1f1",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 5,
+  },
+
+  uploadText: {
+    color: COLORS.primary,
+    fontWeight: "500",
+  },
+
+  previewImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 10,
+    marginTop: 10,
   },
 
   optionItem: {
@@ -476,5 +620,24 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#999",
     marginBottom: 5,
+  },
+  input: {
+    backgroundColor: "#f1f1f1",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+  },
+
+  submitBtn: {
+    marginTop: 15,
+    backgroundColor: COLORS.primary,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  submitText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });

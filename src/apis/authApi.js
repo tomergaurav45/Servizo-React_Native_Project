@@ -331,3 +331,26 @@ export const changePassword = async ({
   }
 };
 
+export const createIssue = async (data) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.CREATE_ISSUES, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to create issue");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Create Issue Error:", error);
+    throw error;
+  }
+};
+
