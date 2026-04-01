@@ -24,13 +24,13 @@ import { COLORS } from "../utils/constants";
 const { height } = Dimensions.get("window");
 
 export default function LoginScreen({ navigation }) {
-  const { login } = useAuth(); 
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  
+
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isLargeScreen = width > 768;
@@ -40,53 +40,53 @@ export default function LoginScreen({ navigation }) {
       ? require("../../assets/images/loginbg.png")
       : require("../../assets/images/loginbg2.jpg");
 
-  
+
   const handleLogin = async () => {
-  if (!email || !password) {
-    Toast.show({
-      type: "error",
-      text1: "Missing details",
-      text2: "Please fill in all fields",
-    });
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    const result = await loginUser(email, password);
-
-    if (!result.success) {
-     
+    if (!email || !password) {
       Toast.show({
         type: "error",
-        text1: "Login failed",
-        text2: result.message,
+        text1: "Missing details",
+        text2: "Please fill in all fields",
       });
       return;
     }
 
-    
-    Toast.show({
-      type: "success",
-      text1: "Login successful",
-      text2: `Welcome ${result.user.name}`,
-    });
+    setLoading(true);
 
-    
-    login(result.user);
+    try {
+      const result = await loginUser(email, password);
 
-  } catch (error) {
-    Toast.show({
-      type: "error",
-      text1: "Error",
-      text2: "Something went wrong",
-    });
-  } finally {
-    setLoading(false);
-  }
-  
-};
+      if (!result.success) {
+
+        Toast.show({
+          type: "error",
+          text1: "Login failed",
+          text2: result.message,
+        });
+        return;
+      }
+
+
+      Toast.show({
+        type: "success",
+        text1: "Login successful",
+        text2: `Welcome ${result.user.name}`,
+      });
+
+
+      login(result.user);
+
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Something went wrong",
+      });
+    } finally {
+      setLoading(false);
+    }
+
+  };
 
   return (
     <KeyboardAvoidingView
@@ -114,7 +114,7 @@ export default function LoginScreen({ navigation }) {
 
             <Text style={styles.subtitle}>Login to continue</Text>
 
-           
+
             <ServizoInput
               label="Email"
               placeholder="Enter your email"
@@ -133,18 +133,18 @@ export default function LoginScreen({ navigation }) {
               onChangeText={setPassword}
             />
 
-           
+
             <View style={styles.row}>
-             
+
               <Text
-  style={styles.forgotText}
-  onPress={() => navigation.navigate("ForgotPasswordScreen")}
->
-  Forgot password?
-</Text>
+                style={styles.forgotText}
+                onPress={() => navigation.navigate("ForgotPasswordScreen")}
+              >
+                Forgot password?
+              </Text>
             </View>
 
-            
+
             <ServizoButton
               title="LOGIN"
               onPress={handleLogin}
@@ -152,7 +152,7 @@ export default function LoginScreen({ navigation }) {
               style={{ marginTop: 10 }}
             />
 
-           
+
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>
                 Don’t have an account?{" "}
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     color: COLORS.primary,
-    fontWeight: "bold", 
+    fontWeight: "bold",
     fontSize: 13,
   },
   registerContainer: {

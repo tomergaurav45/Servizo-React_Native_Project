@@ -93,14 +93,15 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option}
-        onPress={() => navigation.navigate("ChangePassword")}
+          onPress={() => navigation.navigate("ChangePassword")}
         >
-          
+
           <Ionicons name="help-circle-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Change Your Password</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option}>
+        <TouchableOpacity style={styles.option}
+          onPress={() => navigation.navigate("HelpSupportScreen")}>
           <Ionicons name="help-circle-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Help & Support</Text>
         </TouchableOpacity>

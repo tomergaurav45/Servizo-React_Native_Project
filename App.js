@@ -9,6 +9,7 @@ import AddAddressMap from "./src/screens/AddAddressMap";
 import ChangePassword from "./src/screens/ChangePassword";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
+import HelpSupportScreen from "./src/screens/HelpandSupport";
 import LoginScreen from "./src/screens/LoginScreen";
 import ManageAddressScreen from "./src/screens/ManageAddressScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
@@ -44,6 +45,10 @@ function AppNavigator() {
           <Stack.Screen
             name="ChangePassword"
             component={ChangePassword}
+          />
+          <Stack.Screen
+            name="HelpSupportScreen"
+            component={HelpSupportScreen}
           />
         </>
       ) : (

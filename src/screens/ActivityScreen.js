@@ -127,10 +127,10 @@ export default function ActivityScreen() {
 
                             <View style={styles.modalTopBar}>
 
-                            
+
                                 <View style={styles.dragBar} />
 
-                              
+
                                 <TouchableOpacity
                                     style={styles.topIcon}
                                     onPress={() => setShowModal(false)}
@@ -143,7 +143,7 @@ export default function ActivityScreen() {
                                 </TouchableOpacity>
                             </View>
 
-                          
+
                             <View style={styles.modalHeader}>
                                 <Text style={styles.modalTitle}>
                                     {selectedJob?.service} • {selectedJob?.jobType}
@@ -151,10 +151,10 @@ export default function ActivityScreen() {
                                 <Text style={styles.modalPrice}>₹{selectedJob?.price}</Text>
                             </View>
 
-                        
+
                             <View style={styles.divider} />
 
-                         
+
                             <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Job Details</Text>
 
@@ -162,7 +162,7 @@ export default function ActivityScreen() {
                                 <Text style={styles.modalText}>📅 {selectedJob?.date}</Text>
                             </View>
 
-                         
+
                             <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Contact</Text>
 
@@ -170,21 +170,21 @@ export default function ActivityScreen() {
                                 <Text style={styles.modalText}>📞 {selectedJob?.phone}</Text>
                             </View>
 
-                         
+
                             <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Problem</Text>
 
                                 <Text style={styles.modalText}>{selectedJob?.description}</Text>
                             </View>
 
-                         
+
                             <View style={styles.statusBox}>
                                 <Text style={styles.modalStatus}>
                                     Status: {selectedJob?.status}
                                 </Text>
                             </View>
 
-                         
+
                             <TouchableOpacity
                                 style={styles.closeBtn}
                                 onPress={() => setShowModal(false)}

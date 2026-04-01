@@ -75,13 +75,13 @@ export default function AddAddressMap({ navigation }) {
         getAddressFromCoords(coords);
 
 
-if (Platform.OS !== "web" && mapRef.current) {
-        mapRef.current?.animateToRegion({
-            ...coords,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-        });
-    }
+        if (Platform.OS !== "web" && mapRef.current) {
+            mapRef.current?.animateToRegion({
+                ...coords,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            });
+        }
     };
 
     useEffect(() => {
@@ -96,12 +96,12 @@ if (Platform.OS !== "web" && mapRef.current) {
         );
     }
 
-   let MapView;
+    let MapView;
 
-if (Platform.OS !== "web") {
-    const Maps = require("react-native-maps");
-    MapView = Maps.default;
-}
+    if (Platform.OS !== "web") {
+        const Maps = require("react-native-maps");
+        MapView = Maps.default;
+    }
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
@@ -134,26 +134,26 @@ if (Platform.OS !== "web") {
                         <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
                     </TouchableOpacity>
 
-              {Platform.OS !== "web" && MapView && (
-                    <MapView
-                        ref={mapRef}
-                        style={styles.map}
-                        initialRegion={{
-                            latitude: location?.latitude || 28.6139,
-                            longitude: location?.longitude || 77.2090,
-                            latitudeDelta: 0.01,
-                            longitudeDelta: 0.01,
-                        }}
-                        onRegionChangeComplete={(region) => {
-                            const coords = {
-                                latitude: region.latitude,
-                                longitude: region.longitude,
-                            };
+                    {Platform.OS !== "web" && MapView && (
+                        <MapView
+                            ref={mapRef}
+                            style={styles.map}
+                            initialRegion={{
+                                latitude: location?.latitude || 28.6139,
+                                longitude: location?.longitude || 77.2090,
+                                latitudeDelta: 0.01,
+                                longitudeDelta: 0.01,
+                            }}
+                            onRegionChangeComplete={(region) => {
+                                const coords = {
+                                    latitude: region.latitude,
+                                    longitude: region.longitude,
+                                };
 
-                            setLocation(coords);
-                            getAddressFromCoords(coords);
-                        }}
-                    />
+                                setLocation(coords);
+                                getAddressFromCoords(coords);
+                            }}
+                        />
                     )}
 
 
