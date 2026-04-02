@@ -19,6 +19,7 @@ export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
   const [image, setImage] = useState(null);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const isCustomer = user?.role === "provider";
 
   const pickImage = async () => {
     const permission =
@@ -96,24 +97,31 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.optionText}>My Activites</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option}
-          onPress={() => navigation.navigate("ReviewScreen")}
-        >
-          <Ionicons name="flask-outline" size={20} color={COLORS.primary} />
-          <Text style={styles.optionText}>My Ratings / Reviews</Text>
-        </TouchableOpacity>
+        {isCustomer && (
+          <TouchableOpacity
+            style={styles.option}
+            onPress={() => navigation.navigate("ReviewScreen")}
+          >
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={20}
+              color={COLORS.primary}
+            />
+            <Text style={styles.optionText}>My Ratings / Reviews</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.option}
           onPress={() => navigation.navigate("ChangePassword")}
         >
 
-          <Ionicons name="help-circle-outline" size={20} color={COLORS.primary} />
+          <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Change Your Password</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option}
           onPress={() => navigation.navigate("HelpSupportScreen")}>
-          <Ionicons name="help-circle-outline" size={20} color={COLORS.primary} />
+          <Ionicons name="chatbubbles-outline" size={20} color={COLORS.primary} />
           <Text style={styles.optionText}>Help & Support</Text>
         </TouchableOpacity>
 

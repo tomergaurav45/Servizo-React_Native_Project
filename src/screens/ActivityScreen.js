@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import ServizoBackButton from "../components/ServizoBackButton";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -19,9 +21,7 @@ export default function ActivityScreen() {
     const role = user?.role;
     const isSeeker = role === "customer";
 
-    const [activeTab, setActiveTab] = useState(
-        isSeeker ? "requests" : "accepted"
-    );
+   const [activeTab, setActiveTab] = useState("");
 
     const [selectedJob, setSelectedJob] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -54,6 +54,15 @@ export default function ActivityScreen() {
         });
         setShowModal(true);
     };
+
+    useFocusEffect(
+  useCallback(() => {
+    const currentRole = user?.role;
+    const isSeeker = currentRole === "customer";
+
+    setActiveTab(isSeeker ? "requests" : "accepted");
+  }, [user])
+);
 
     const renderContent = () => {
         switch (activeTab) {

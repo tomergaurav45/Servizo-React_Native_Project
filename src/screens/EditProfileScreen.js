@@ -30,6 +30,14 @@ export default function EditProfileScreen() {
   const [firstName, setFirstName] = useState(nameParts[0] || "");
   const [lastName, setLastName] = useState(nameParts.slice(1).join(" ") || "");
 
+  useEffect(() => {
+  if (role !== "provider") {
+    setSkills([]);
+    setExperience("");
+    setAvailability("");
+  }
+}, [role]);
+
   //const [role, setRole] = useState(user?.role || "");
 
   const [roleEditable, setRoleEditable] = useState(false);
@@ -281,56 +289,60 @@ export default function EditProfileScreen() {
             </TouchableOpacity>
           )}
 
-          <ServizoMultiSelectDropdown
-            label="Skills"
-            icon="build-outline"
-            data={[
-              "Plumbing", "Electrician", "Cleaning", "AC Repair", "Painter",
-              "Carpentry", "Appliance Repair", "Home Services", "Barber",
-              "Tutor", "Fitness Trainer", "Delivery Helper", "General Services",
-              "Driver", "Mechanic", "Gardner", "Security Guard",
-              "RO / Water Purifier Repair"
-            ]}
-            selectedValues={skills}
-            placeholder="Select Skills"
-            onChange={(value) => {
-              setSkills(value);
-              setSkillsError("");
-            }}
-          />
-          {skillsError ? (
-            <Text style={styles.errorText}>{skillsError}</Text>
-          ) : null}
+        {role === "provider" && (
+  <>
+    <ServizoMultiSelectDropdown
+      label="Skills"
+      icon="build-outline"
+      data={[
+        "Plumbing", "Electrician", "Cleaning", "AC Repair", "Painter",
+        "Carpentry", "Appliance Repair", "Home Services", "Barber",
+        "Tutor", "Fitness Trainer", "Delivery Helper", "General Services",
+        "Driver", "Mechanic", "Gardner", "Security Guard",
+        "RO / Water Purifier Repair"
+      ]}
+      selectedValues={skills}
+      placeholder="Select Skills"
+      onChange={(value) => {
+        setSkills(value);
+        setSkillsError("");
+      }}
+    />
+    {skillsError ? (
+      <Text style={styles.errorText}>{skillsError}</Text>
+    ) : null}
 
-          <ServizoDropdown
-            label="Experience"
-            placeholder="Years of experience"
-            icon="time-outline"
-            data={["0-1 Year", "1-3 Years", "3-8 Year", "8+ Year"]}
-            value={experience}
-            onSelect={(value) => {
-              setExperience(value);
-              setExperienceError("");
-            }}
-          />
-          {experienceError ? (
-            <Text style={styles.errorText}>{experienceError}</Text>
-          ) : null}
+    <ServizoDropdown
+      label="Experience"
+      placeholder="Years of experience"
+      icon="time-outline"
+      data={["0-1 Year", "1-3 Years", "3-8 Year", "8+ Year"]}
+      value={experience}
+      onSelect={(value) => {
+        setExperience(value);
+        setExperienceError("");
+      }}
+    />
+    {experienceError ? (
+      <Text style={styles.errorText}>{experienceError}</Text>
+    ) : null}
 
-          <ServizoDropdown
-            label="Availability"
-            placeholder="Availability"
-            icon="calendar-outline"
-            data={["Part time", "Full Time", "Only Weekends"]}
-            value={availability}
-            onSelect={(value) => {
-              setAvailability(value);
-              setAvailabilityError("");
-            }}
-          />
-          {availabilityError ? (
-            <Text style={styles.errorText}>{availabilityError}</Text>
-          ) : null}
+    <ServizoDropdown
+      label="Availability"
+      placeholder="Availability"
+      icon="calendar-outline"
+      data={["Part time", "Full Time", "Only Weekends"]}
+      value={availability}
+      onSelect={(value) => {
+        setAvailability(value);
+        setAvailabilityError("");
+      }}
+    />
+    {availabilityError ? (
+      <Text style={styles.errorText}>{availabilityError}</Text>
+    ) : null}
+  </>
+)}
 
           <TouchableOpacity style={styles.saveBtn} onPress={handleSaveChanges}>
             <Text style={styles.saveText}>Save Changes</Text>
