@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ServizoAlert } from "../components/ServizoAlert";
 
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -17,6 +18,7 @@ import { COLORS } from "../utils/constants";
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
   const [image, setImage] = useState(null);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const pickImage = async () => {
     const permission =
@@ -47,23 +49,25 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.container}>
 
         {/* Profile Image */}
-        <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
-          <Image
-            source={
-              image
-                ? { uri: image }
-                : require("../../assets/images/avatar.png")
-            }
-            style={styles.avatar}
-          />
-          <View style={styles.cameraIcon}>
-            <Ionicons name="camera-outline" size={18} color="#fff" />
-          </View>
-        </TouchableOpacity>
+        <View style={styles.profileCard}>
+          <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
+            <Image
+              source={
+                image
+                  ? { uri: image }
+                  : require("../../assets/images/avatar.png")
+              }
+              style={styles.avatar}
+            />
+            <View style={styles.cameraIcon}>
+              <Ionicons name="camera-outline" size={18} color="#fff" />
+            </View>
+          </TouchableOpacity>
 
-        {/* User Info */}
-        <Text style={styles.email}>{user?.name}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
+          {/* User Info */}
+          <Text style={styles.name}>{user?.name}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
+        </View>
 
         {/* Divider */}
         <View style={styles.divider} />
@@ -93,6 +97,13 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option}
+          onPress={() => navigation.navigate("ReviewScreen")}
+        >
+          <Ionicons name="flask-outline" size={20} color={COLORS.primary} />
+          <Text style={styles.optionText}>My Ratings / Reviews</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.option}
           onPress={() => navigation.navigate("ChangePassword")}
         >
 
@@ -107,12 +118,25 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          onPress={() => setShowLogoutAlert(true)}
+        >
           <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
       </View>
+      <ServizoAlert
+        visible={showLogoutAlert}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        onCancel={() => setShowLogoutAlert(false)}
+        onConfirm={() => {
+          setShowLogoutAlert(false);
+          logout();
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -145,6 +169,24 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
   },
+  profileCard: {
+    width: "100%",
+    backgroundColor: "#bde0fe",
+    borderRadius: 20,
+    alignItems: "center",
+    paddingVertical: 25,
+    marginTop: 20,
+
+    // Shadow (iOS)
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+
+    // Shadow (Android)
+    elevation: 5,
+  },
+
   name: {
     fontSize: 20,
     fontWeight: "bold",

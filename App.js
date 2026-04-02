@@ -13,6 +13,7 @@ import HelpSupportScreen from "./src/screens/HelpandSupport";
 import LoginScreen from "./src/screens/LoginScreen";
 import ManageAddressScreen from "./src/screens/ManageAddressScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
+import ReviewScreen from "./src/screens/ReviewScreen";
 const Stack = createNativeStackNavigator();
 
 const toastConfig = {
@@ -41,6 +42,10 @@ function AppNavigator() {
           <Stack.Screen
             name="ActivityScreen"
             component={ActivityScreen}
+          />
+          <Stack.Screen
+            name="ReviewScreen"
+            component={ReviewScreen}
           />
           <Stack.Screen
             name="ChangePassword"
