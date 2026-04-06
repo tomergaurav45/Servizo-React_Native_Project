@@ -16,10 +16,8 @@ import ServizoDropdown from "../components/ServizoDropdown";
 import ServizoInput from "../components/ServizoInput";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
-
 export default function AddAddressMap({ navigation }) {
     const mapRef = useRef(null);
-
     const [location, setLocation] = useState(null);
     const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
@@ -31,12 +29,9 @@ export default function AddAddressMap({ navigation }) {
     const getAddressFromCoords = async (coords) => {
         try {
             setLoading(true);
-
             const reverse = await Location.reverseGeocodeAsync(coords);
-
             if (reverse.length > 0) {
                 const place = reverse[0];
-
                 const fullAddress = [
                     place.name,
                     place.street,
@@ -55,26 +50,19 @@ export default function AddAddressMap({ navigation }) {
             setLoading(false);
         }
     };
-
     const getCurrentLocation = async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
-
         if (status !== "granted") {
             alert("Location permission denied");
             return;
         }
-
         const loc = await Location.getCurrentPositionAsync({});
-
         const coords = {
             latitude: loc.coords.latitude,
             longitude: loc.coords.longitude,
         };
-
         setLocation(coords);
         getAddressFromCoords(coords);
-
-
         if (Platform.OS !== "web" && mapRef.current) {
             mapRef.current?.animateToRegion({
                 ...coords,
@@ -83,11 +71,9 @@ export default function AddAddressMap({ navigation }) {
             });
         }
     };
-
     useEffect(() => {
         getCurrentLocation();
     }, []);
-
     if (Platform.OS === "web") {
         return (
             <View style={styles.webContainer}>
@@ -97,16 +83,16 @@ export default function AddAddressMap({ navigation }) {
     }
 
     let MapView;
+    let Marker = null;
 
     if (Platform.OS !== "web") {
-        const Maps = require("react-native-maps");
+        const Maps = eval("require")("react-native-maps"); 
         MapView = Maps.default;
+        Marker = Maps.Marker;
     }
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
-
-
                 <View style={styles.mapContainer}>
 
                     <TouchableOpacity style={styles.logoBtn}>

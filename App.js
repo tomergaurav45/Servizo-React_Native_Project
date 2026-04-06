@@ -4,7 +4,7 @@ import Toast from "react-native-toast-message";
 import { ServizoToast } from "./src/components/ServizoToast";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import BottomTabs from "./src/navigation/BottomTabs";
-import ActivityScreen from "./src/screens/ActivityScreen";
+//import ActivityScreen from "./src/screens/ActivityScreen";
 import AddAddressMap from "./src/screens/AddAddressMap";
 import ChangePassword from "./src/screens/ChangePassword";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
@@ -38,10 +38,6 @@ function AppNavigator() {
           <Stack.Screen
             name="AddAddressMap"
             component={AddAddressMap}
-          />
-          <Stack.Screen
-            name="ActivityScreen"
-            component={ActivityScreen}
           />
           <Stack.Screen
             name="ReviewScreen"
