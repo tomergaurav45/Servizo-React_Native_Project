@@ -189,20 +189,29 @@ export default function HomeScreen() {
           />
         </TouchableOpacity>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Hi</Text>
-          <Text style={styles.subText}>
-            What service do you need today?
-          </Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.greeting}>Hi</Text>
+            <Text style={styles.subText}>
+              What service do you need today?
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.notificationIcon}
+            onPress={() => console.log("Notification clicked")}
+          >
+            <Ionicons name="notifications-outline" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
 
-        {/* Search */}
+
         <TouchableOpacity style={styles.searchBox}>
           <Ionicons name="search-outline" size={20} color="#888" />
           <Text style={styles.searchText}>Search for services</Text>
         </TouchableOpacity>
 
-        {/* Categories */}
+
         <Text style={styles.sectionTitle}>Categories</Text>
         <View style={styles.categoryGrid}>
           {categories.map((item) => (
@@ -319,6 +328,19 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     marginBottom: 15,
+  },
+
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  notificationIcon: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#f1f1f1",
   },
 
   locationLabel: {

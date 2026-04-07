@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BookingsScreen from "../screens/BookingsScreen";
 import HomeScreen from "../screens/HomeScreen";
+import MessageListScreen from "../screens/MessagesListScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import { COLORS } from "../utils/constants";
 
@@ -18,6 +19,8 @@ export default function BottomTabs() {
         return "home-outline";
       case "Bookings":
         return "calendar-outline";
+      case "Message":
+        return "message-square";
       case "Profile":
         return "person-outline";
       default:
@@ -42,8 +45,10 @@ export default function BottomTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Message" component={MessageListScreen} />
       <Tab.Screen name="Bookings" component={BookingsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      
     </Tab.Navigator>
   );
 }
