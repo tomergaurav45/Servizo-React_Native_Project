@@ -12,6 +12,7 @@ import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import HelpSupportScreen from "./src/screens/HelpandSupport";
 import LoginScreen from "./src/screens/LoginScreen";
 import ManageAddressScreen from "./src/screens/ManageAddressScreen";
+import NotificationScreen from "./src/screens/NotificationScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import ReviewScreen from "./src/screens/ReviewScreen";
 const Stack = createNativeStackNavigator();
@@ -50,6 +51,10 @@ function AppNavigator() {
           <Stack.Screen
             name="HelpSupportScreen"
             component={HelpSupportScreen}
+          />
+          <Stack.Screen
+            name="NotificationScreen"
+            component={NotificationScreen}
           />
         </>
       ) : (

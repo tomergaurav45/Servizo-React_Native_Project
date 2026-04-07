@@ -20,7 +20,7 @@ export default function BottomTabs() {
       case "Bookings":
         return "calendar-outline";
       case "Message":
-        return "message-square";
+        return "chatbubble-ellipses-outline";
       case "Profile":
         return "person-outline";
       default:

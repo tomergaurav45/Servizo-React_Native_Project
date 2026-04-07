@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import {
@@ -31,7 +32,7 @@ export default function HomeScreen() {
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("");
   const [showRoleModal, setShowRoleModal] = useState(false);
-
+  const navigation = useNavigation();
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -114,9 +115,6 @@ export default function HomeScreen() {
 
 
   return (
-
-
-
     <SafeAreaView style={styles.safeArea}>
       <Modal visible={showRoleModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -171,7 +169,10 @@ export default function HomeScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity style={styles.locationBar}>
+       <TouchableOpacity
+  style={styles.locationBar}
+  onPress={() => navigation.navigate("ManageAddressScreen")}
+>
           <Ionicons name="location-outline" size={20} color={COLORS.primary} />
 
           <View style={{ marginLeft: 8 }}>
@@ -191,16 +192,16 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.greeting}>Hi</Text>
+            <Text style={styles.greeting}>Welcome to Servizo</Text>
             <Text style={styles.subText}>
-              What service do you need today?
+              How would you like to use the app?
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.notificationIcon}
-            onPress={() => console.log("Notification clicked")}
-          >
+        <TouchableOpacity
+  style={styles.notificationIcon}
+  onPress={() => navigation.navigate("NotificationScreen")}
+>
             <Ionicons name="notifications-outline" size={22} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: "bold",
     color: COLORS.textDark,
   },
