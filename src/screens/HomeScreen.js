@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { Video } from "expo-av";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Image,
+  FlatList, Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -25,6 +26,75 @@ const categories = [
   { id: 6, name: "Appliance Repair", icon: "build-outline" },
 ];
 
+const videos = [
+  {
+    id: "1",
+    title: "Home Cleaning",
+    source: require("../../assets/videos/cleaning.mp4"),
+  },
+  {
+    id: "2",
+    title: "Electrician",
+    source: require("../../assets/videos/electrician.mp4"),
+  },
+  {
+    id: "3",
+    title: "Plumber",
+    source: require("../../assets/videos/plumber.mp4"),
+  },
+  {
+    id: "4",
+    title: "AC Repair & Services",
+    source: require("../../assets/videos/ac.mp4"),
+  },
+  {
+    id: "5",
+    title: "Carpenter",
+    source: require("../../assets/videos/carpenter.mp4"),
+  },
+  {
+    id: "6",
+    title: "Car Washing",
+    source: require("../../assets/videos/carwashing.mp4"),
+  },
+  {
+    id: "7",
+    title: "Renovation",
+    source: require("../../assets/videos/civil.mp4"),
+  },
+  {
+    id: "8",
+    title: "Goods Transport",
+    source: require("../../assets/videos/delivery.mp4"),
+  },
+  {
+    id: "9",
+    title: "Painter",
+    source: require("../../assets/videos/paint.mp4"),
+  },
+  {
+    id: "10",
+    title: "Pet Caretaker",
+    source: require("../../assets/videos/pet.mp4"),
+  },
+  {
+    id: "11",
+    title: "Appliance Repair",
+    source: require("../../assets/videos/television.mp4"),
+  },
+  {
+    id: "12",
+    title: "Yoga & Home tutor",
+    source: require("../../assets/videos/tutor.mp4"),
+  },
+  {
+    id: "13",
+    title: "Car Washing and Mechanics",
+    source: require("../../assets/videos/washing.mp4"),
+  }
+
+];
+
 export default function HomeScreen() {
 
   const { user, updateRole } = useAuth();
@@ -33,6 +103,17 @@ export default function HomeScreen() {
   const [address, setAddress] = useState("");
   const [showRoleModal, setShowRoleModal] = useState(false);
   const navigation = useNavigation();
+  const [visibleVideoId, setVisibleVideoId] = useState("1");
+
+  const viewConfigRef = useRef({
+    viewAreaCoveragePercentThreshold: 70,
+  });
+
+  const onViewRef = useRef(({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      setVisibleVideoId(viewableItems[0].item.id);
+    }
+  });
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -125,13 +206,13 @@ export default function HomeScreen() {
                 source={require("../../assets/images/icon1.png")}
                 style={styles.modalIcon}
               />
-              <Text style={styles.modalTitle}>
-                Welcome to Servizo
+              <Text style={styles.greeting}>
+                Hi {user?.name || "User"}
               </Text>
             </View>
 
-            <Text style={styles.modalSubtitle}>
-              How do you want to use Servizo?
+            <Text style={styles.subText}>
+              What service do you need today?
             </Text>
 
             {/* Find Services */}
@@ -169,10 +250,10 @@ export default function HomeScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-       <TouchableOpacity
-  style={styles.locationBar}
-  onPress={() => navigation.navigate("ManageAddressScreen")}
->
+        <TouchableOpacity
+          style={styles.locationBar}
+          onPress={() => navigation.navigate("ManageAddressScreen")}
+        >
           <Ionicons name="location-outline" size={20} color={COLORS.primary} />
 
           <View style={{ marginLeft: 8 }}>
@@ -192,17 +273,25 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.greeting}>Welcome to Servizo</Text>
+            <Text style={styles.greeting}>
+              Hey!! {user?.name || "User"}
+            </Text>
             <Text style={styles.subText}>
-              How would you like to use the app?
+              What service do you need today?
             </Text>
           </View>
 
-        <TouchableOpacity
-  style={styles.notificationIcon}
-  onPress={() => navigation.navigate("NotificationScreen")}
->
-            <Ionicons name="notifications-outline" size={22} color={COLORS.primary} />
+          <TouchableOpacity
+            style={styles.notificationIcon}
+            onPress={() => navigation.navigate("NotificationScreen")}
+          >
+            <View>
+              <Ionicons name="notifications-outline" size={22} color={COLORS.primary} />
+
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>2</Text>
+              </View>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -212,11 +301,71 @@ export default function HomeScreen() {
           <Text style={styles.searchText}>Search for services</Text>
         </TouchableOpacity>
 
+        <View style={styles.videoContainer}>
+          <Video
+            source={require("../../assets/videos/add.mp4")} // your video
+            style={styles.video}
+            resizeMode="cover"
+            shouldPlay
+            isLooping
+            isMuted
+          />
+        </View>
+
+
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={styles.sectionTitle}>Featured Services</Text>
+
+          <TouchableOpacity onPress={() => navigation.navigate("AllServicesScreen")}>
+            <Text style={{ color: COLORS.primary, fontWeight: "600" }}>
+              View All
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <FlatList
+          data={videos}
+          horizontal
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.videoCard}
+              onPress={() =>
+                navigation.navigate("ServiceList", { service: item.title })
+              }
+            >
+              <Video
+                source={item.source}
+                style={styles.video}
+                resizeMode="cover"
+                shouldPlay={visibleVideoId === item.id} // 🔥 only visible plays
+                isLooping
+                isMuted
+              />
+
+              <View style={styles.videoOverlay}>
+                <Text style={styles.videoTitle}>{item.title}</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          onViewableItemsChanged={onViewRef.current}
+          viewabilityConfig={viewConfigRef.current}
+          snapToInterval={232} // 🔥 smooth snapping
+          decelerationRate="fast"
+        />
+
 
         <Text style={styles.sectionTitle}>Categories</Text>
         <View style={styles.categoryGrid}>
           {categories.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.categoryCard}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.categoryCard}
+              onPress={() =>
+                navigation.navigate("ServiceList", { service: item.name })
+              }
+            >
               <Ionicons name={item.icon} size={28} color={COLORS.primary} />
               <Text style={styles.categoryText}>{item.name}</Text>
             </TouchableOpacity>
@@ -418,6 +567,50 @@ const styles = StyleSheet.create({
   roleSubtitle: {
     fontSize: 13,
     color: "#666",
+  },
+  videoContainer: {
+    height: 160,
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 20,
+  },
+
+  video: {
+    width: "100%",
+    height: "100%",
+  },
+  videoCard: {
+    width: 220,
+    height: 160,
+    borderRadius: 14,
+    overflow: "hidden",
+    marginRight: 12,
+    marginBottom: 12,
+  },
+
+  videoOverlay: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+  },
+
+  videoTitle: {
+    color: "#f4f0f0",
+    fontWeight: "bold",
+    backgroundColor: "#ab1212"
+  },
+  badge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "red",
+    borderRadius: 10,
+    paddingHorizontal: 5,
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
   },
 });
 

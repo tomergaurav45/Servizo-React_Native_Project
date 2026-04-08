@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import BottomTabs from "./src/navigation/BottomTabs";
 //import ActivityScreen from "./src/screens/ActivityScreen";
 import AddAddressMap from "./src/screens/AddAddressMap";
+import AllServicesScreen from "./src/screens/AllServicesScreen";
 import ChangePassword from "./src/screens/ChangePassword";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
@@ -15,6 +16,7 @@ import ManageAddressScreen from "./src/screens/ManageAddressScreen";
 import NotificationScreen from "./src/screens/NotificationScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import ReviewScreen from "./src/screens/ReviewScreen";
+import ServiceListScreen from "./src/screens/ServiceListScreen";
 const Stack = createNativeStackNavigator();
 
 const toastConfig = {
@@ -56,6 +58,15 @@ function AppNavigator() {
             name="NotificationScreen"
             component={NotificationScreen}
           />
+          <Stack.Screen
+  name="ServiceList"
+  component={ServiceListScreen}
+/>
+          <Stack.Screen
+  name="AllServicesScreen"
+  component={AllServicesScreen}
+/>
+
         </>
       ) : (
         <>
@@ -65,7 +76,7 @@ function AppNavigator() {
             name="ForgotPasswordScreen"
             component={ForgotPasswordScreen}
           />
-
+          
         </>
 
       )}
