@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     FlatList,
     StyleSheet,
@@ -10,46 +10,36 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getServices } from "../apis/authApi";
 import { COLORS } from "../utils/constants";
-
-
-const allServices = [
-    {
-        title: "Home Services",
-        data: [
-            { name: "Home Cleaning", icon: "home-outline" },
-            { name: "Painting", icon: "color-palette-outline" },
-            { name: "Renovation", icon: "hammer-outline" },
-        ],
-    },
-    {
-        title: "Repair Services",
-        data: [
-            { name: "Electrician", icon: "flash-outline" },
-            { name: "Plumber", icon: "water-outline" },
-            { name: "AC Repair", icon: "snow-outline" },
-            { name: "Appliance Repair", icon: "construct-outline" },
-        ],
-    },
-    {
-        title: "Transport Services",
-        data: [
-            { name: "Goods Transport", icon: "cube-outline" },
-            { name: "House Shifting", icon: "car-outline" },
-        ],
-    },
-];
 
 const AllServicesScreen = () => {
     const navigation = useNavigation();
     const [search, setSearch] = useState("");
+    const [servicesData, setServicesData] = useState([]);
 
-    const filteredServices = allServices.map((section) => ({
-        ...section,
-        data: section.data.filter((item) =>
-            item.name.toLowerCase().includes(search.toLowerCase())
-        ),
-    }));
+    const filteredServices = servicesData
+        .map((section) => ({
+            ...section,
+            data: section.data.filter((item) =>
+                item.name.toLowerCase().includes(search.toLowerCase())
+            ),
+        }))
+        .filter((section) => section.data.length > 0);
+
+    useEffect(() => {
+        fetchServices();
+    }, []);
+
+    const fetchServices = async () => {
+        const res = await getServices();
+
+        if (res.success) {
+            setServicesData(res.data);
+        } else {
+            console.log(res.message);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>

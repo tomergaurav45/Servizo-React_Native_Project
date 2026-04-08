@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { Video } from "expo-av";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
@@ -8,22 +8,26 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
+  Text, TextInput, TouchableOpacity,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { registerUser } from "../apis/authApi";
+import { getServices, registerUser } from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
+
+
+
 const categories = [
   { id: 1, name: "Home Cleaning", icon: "home-outline" },
   { id: 2, name: "Electrician", icon: "flash-outline" },
   { id: 3, name: "Plumber", icon: "water-outline" },
-  { id: 4, name: "Salon", icon: "cut-outline" },
-  { id: 5, name: "AC Repair", icon: "snow-outline" },
+  { id: 4, name: "AC Repair", icon: "snow-outline" },
+  { id: 5, name: "Salon", icon: "cut-outline" },
   { id: 6, name: "Appliance Repair", icon: "build-outline" },
+  { id: 7, name: "Delivery", icon: "bicycle-outline" },
+  { id: 8, name: "Carpenter", icon: "hammer-outline" },
 ];
 
 const videos = [
@@ -95,6 +99,8 @@ const videos = [
 
 ];
 
+
+
 export default function HomeScreen() {
 
   const { user, updateRole } = useAuth();
@@ -104,6 +110,21 @@ export default function HomeScreen() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const navigation = useNavigation();
   const [visibleVideoId, setVisibleVideoId] = useState("1");
+  const route = useRoute();
+  const [searchText, setSearchText] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [allServicesFlat, setAllServicesFlat] = useState([]);
+
+  const [search, setSearch] = useState(route.params?.search || "");
+  const [recentServices, setRecentServices] = useState([
+    { name: "Plumber", icon: "water-outline" },
+    { name: "AC Repair", icon: "snow-outline" }
+  ]);
+
+
+  const [ongoingJobs, setOngoingJobs] = useState([
+    { name: "Home Cleaning", status: "In Progress" }
+  ]);
 
   const viewConfigRef = useRef({
     viewAreaCoveragePercentThreshold: 70,
@@ -143,6 +164,34 @@ export default function HomeScreen() {
       setShowRoleModal(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    const res = await getServices();
+
+    if (res.success) {
+      const flat = res.data.flatMap(section => section.data);
+      setAllServicesFlat(flat);
+    }
+  };
+
+  const handleSearch = (text) => {
+    setSearchText(text);
+
+    if (text.length === 0) {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtered = allServicesFlat.filter(item =>
+      item.name.toLowerCase().includes(text.toLowerCase())
+    );
+
+    setSuggestions(filtered.slice(0, 5)); // limit results
+  };
 
   const selectRole = async (role) => {
     try {
@@ -296,10 +345,41 @@ export default function HomeScreen() {
         </View>
 
 
-        <TouchableOpacity style={styles.searchBox}>
-          <Ionicons name="search-outline" size={20} color="#888" />
-          <Text style={styles.searchText}>Search for services</Text>
-        </TouchableOpacity>
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <Ionicons name="search-outline" size={20} color="#888" />
+
+            <TextInput
+              placeholder="Search for services"
+              value={searchText}
+              onChangeText={handleSearch} // ✅ IMPORTANT
+              style={{ marginLeft: 10, flex: 1, paddingVertical: 0 }}
+            />
+          </View>
+
+          {/* 🔥 DROPDOWN */}
+          {suggestions.length > 0 && (
+            <View style={styles.dropdown}>
+              {suggestions.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setSearchText(item.name);
+                    setSuggestions([]);
+
+                    navigation.navigate("ServiceList", {
+                      service: item.name,
+                    });
+                  }}
+                >
+                  <Ionicons name={item.icon} size={18} color="#555" />
+                  <Text style={styles.dropdownText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
 
         <View style={styles.videoContainer}>
           <Video
@@ -371,6 +451,37 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        {recentServices.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Recently Used</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {recentServices.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.recentCard}
+                  onPress={() =>
+                    navigation.navigate("ServiceList", { service: item.name })
+                  }
+                >
+                  <Ionicons name={item.icon} size={24} color={COLORS.primary} />
+                  <Text style={styles.recentText}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
+
+        {ongoingJobs.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Ongoing Jobs</Text>
+            {ongoingJobs.map((job, index) => (
+              <View key={index} style={styles.jobCard}>
+                <Text style={styles.jobTitle}>{job.name}</Text>
+                <Text style={styles.jobStatus}>{job.status}</Text>
+              </View>
+            ))}
+          </>
+        )}
 
         {/* Popular Services */}
         <Text style={styles.sectionTitle}>Popular Services</Text>
@@ -418,6 +529,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f1f1f1",
     padding: 14,
+    paddingVertical: 8,
     borderRadius: 10,
     marginBottom: 20,
   },
@@ -611,6 +723,65 @@ const styles = StyleSheet.create({
   badgeText: {
     color: "#fff",
     fontSize: 10,
+  },
+  recentCard: {
+    backgroundColor: "#f9f9f9",
+    padding: 14,
+    borderRadius: 12,
+    marginRight: 10,
+    alignItems: "center",
+    width: 100
+  },
+
+  recentText: {
+    marginTop: 6,
+    fontSize: 12,
+    textAlign: "center"
+  },
+
+  jobCard: {
+    backgroundColor: "#E3F2FD",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+
+  jobTitle: {
+    fontWeight: "bold",
+    fontSize: 14
+  },
+
+  jobStatus: {
+    color: COLORS.primary,
+    marginTop: 4,
+    fontSize: 12
+  },
+  searchContainer: {
+    position: "relative",
+    marginBottom: 20,
+  },
+
+  dropdown: {
+    position: "absolute",
+    top: 55,
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    elevation: 5,
+    zIndex: 1000,
+  },
+
+  dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 0.5,
+    borderColor: "#eee",
+  },
+
+  dropdownText: {
+    marginLeft: 10,
+    fontSize: 14,
   },
 });
 

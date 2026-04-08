@@ -59,13 +59,13 @@ function AppNavigator() {
             component={NotificationScreen}
           />
           <Stack.Screen
-  name="ServiceList"
-  component={ServiceListScreen}
-/>
+            name="ServiceList"
+            component={ServiceListScreen}
+          />
           <Stack.Screen
-  name="AllServicesScreen"
-  component={AllServicesScreen}
-/>
+            name="AllServicesScreen"
+            component={AllServicesScreen}
+          />
 
         </>
       ) : (
@@ -76,7 +76,7 @@ function AppNavigator() {
             name="ForgotPasswordScreen"
             component={ForgotPasswordScreen}
           />
-          
+
         </>
 
       )}

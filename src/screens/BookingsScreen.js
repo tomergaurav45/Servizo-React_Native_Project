@@ -31,7 +31,7 @@ const T = {
   warning: "#fb923c",
 };
 
-// ─── Status config ─────────────────────────────────────────────────────────
+
 const STATUS_CONFIG = {
   Pending: { color: T.warning, bg: "rgba(251,146,60,0.12)", label: "Pending" },
   "In Progress": { color: T.info, bg: "rgba(96,165,250,0.12)", label: "In Progress" },
@@ -40,7 +40,7 @@ const STATUS_CONFIG = {
   Waiting: { color: T.warning, bg: "rgba(251,146,60,0.12)", label: "Waiting" },
 };
 
-// ─── Seeker / Provider tabs ───────────────────────────────────────────────
+
 const SEEKER_TABS = [
   { key: "requests", label: "Requests" },
   { key: "ongoing", label: "Ongoing" },

@@ -354,3 +354,27 @@ export const createIssue = async (data) => {
   }
 };
 
+export const getServices = async () => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.GET_SERVICES, {
+      method: "GET"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to fetch services"
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while fetching services"
+    };
+  }
+};
