@@ -16,7 +16,7 @@ const ServiceListScreen = () => {
 
     const { service } = route.params || {};
 
-    // 🔥 Dummy data (later connect backend)
+
     const services = [
         { id: "1", name: "Basic Cleaning", price: "₹499" },
         { id: "2", name: "Deep Cleaning", price: "₹999" },
@@ -24,7 +24,15 @@ const ServiceListScreen = () => {
     ];
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+                navigation.navigate("FinalScreen", {
+                    serviceName: service,
+                    subService: item.name,
+                })
+            }
+        >
             <View>
                 <Text style={styles.title}>{item.name}</Text>
                 <Text style={styles.price}>{item.price}</Text>

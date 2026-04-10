@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,7 +12,8 @@ import { COLORS } from "../utils/constants";
 
 export default function ManageAddressScreen() {
   const navigation = useNavigation();
-
+  const route = useRoute();
+  const { onSelectAddress } = route.params || {};
   const { user } = useAuth();
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,8 +39,24 @@ export default function ManageAddressScreen() {
   );
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => {
+        if (onSelectAddress) {
+          onSelectAddress({
+            id: item._id,
+            title:
+              item.type === "Other" && item.other
+                ? item.other
+                : item.type,
+            fullAddress: item.fullAddress,
+            landmark: item.landmark,
+          });
+        }
 
+        navigation.goBack();
+      }}
+    >
 
       <View style={styles.cardHeader}>
 
@@ -49,8 +66,10 @@ export default function ManageAddressScreen() {
             : item.type}
         </Text>
 
+        {/* ❗ Prevent delete click from triggering selection */}
         <TouchableOpacity
-          onPress={() => {
+          onPress={(e) => {
+            e.stopPropagation(); // 🔥 IMPORTANT
             setSelectedAddressId(item._id);
             setShowDeleteAlert(true);
           }}
@@ -70,7 +89,7 @@ export default function ManageAddressScreen() {
         </Text>
       ) : null}
 
-    </View>
+    </TouchableOpacity>
   );
 
   const handleDelete = async () => {
