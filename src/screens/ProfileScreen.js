@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Alert,
   Image,
@@ -11,6 +12,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getAddresses } from "../apis/authApi";
 import { ServizoAlert } from "../components/ServizoAlert";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -70,6 +72,23 @@ export default function ProfileScreen({ navigation }) {
   const [image, setImage] = useState(null);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const isProvider = user?.role === "provider";
+  const [addresses, setAddresses] = useState([]);
+  const isAddressMissing = () => {
+    return !addresses || addresses.length === 0;
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchAddresses = async () => {
+        const res = await getAddresses(user?.userId);
+        if (res.success) {
+          setAddresses(res.data || []);
+        }
+      };
+
+      fetchAddresses();
+    }, [user])
+  );
 
   const initials = user?.name
     ? user.name
@@ -99,6 +118,20 @@ export default function ProfileScreen({ navigation }) {
       setImage(result.assets[0].uri);
     }
   };
+  const isProfileIncomplete = () => {
+    if (!user?.phone || user.phone.length !== 10) return true;
+    if (!user?.gender) return true;
+    if (!user?.dob) return true;
+
+    // provider specific
+    if (user?.role === "provider") {
+      if (!user?.skills || user.skills.length === 0) return true;
+      if (!user?.experience) return true;
+      if (!user?.availability) return true;
+    }
+
+    return false;
+  };
 
   const renderMenuItem = (item, index, arr) => {
     if (item.providerOnly && !isProvider) return null;
@@ -126,19 +159,19 @@ export default function ProfileScreen({ navigation }) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
 
-        {/* Dark Profile Card */}
+
         <View style={styles.profileCard}>
-          {/* Decorative circles */}
+
           <View style={styles.deco1} />
           <View style={styles.deco2} />
 
           <View style={styles.profileRow}>
-            {/* Avatar */}
+
             <TouchableOpacity onPress={pickImage} style={styles.avatarWrap}>
               <Image
                 source={
@@ -190,7 +223,38 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Menu Group 1 */}
         <View style={styles.menuCard}>
-          {MENU_ITEMS_TOP.map((item, i) => renderMenuItem(item, i, MENU_ITEMS_TOP))}
+          {MENU_ITEMS_TOP.map((item, i) => (
+            <View key={item.screen}>
+
+              {renderMenuItem(item, i, MENU_ITEMS_TOP)}
+
+              {item.label === "Edit Profile" && isProfileIncomplete() && (
+                <TouchableOpacity
+                  style={styles.warningCard}
+                  onPress={() => navigation.navigate("EditProfileScreen")}
+                >
+                  <Ionicons name="warning-outline" size={16} color="#fff" />
+                  <Text style={styles.warningText}>
+                    Please complete your profile
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+
+              {item.label === "Manage Address" && isAddressMissing() && (
+                <TouchableOpacity
+                  style={styles.warningCard}
+                  onPress={() => navigation.navigate("ManageAddressScreen")}
+                >
+                  <Ionicons name="location-outline" size={16} color="#fff" />
+                  <Text style={styles.warningText}>
+                    Please add at least one address
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+            </View>
+          ))}
         </View>
 
         {/* Menu Group 2 */}
@@ -368,6 +432,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     marginTop: 20,
+  },
+  warningCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E53935",
+    marginHorizontal: 16,
+    marginBottom: 8,
+    padding: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+
+  warningText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
   statBox: {
     flex: 1,

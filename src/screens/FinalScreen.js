@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { createBooking } from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
@@ -20,15 +21,20 @@ export default function FinalScreen() {
     const [selectedAddress, setSelectedAddress] = useState(null);
     const { user } = useAuth();
 
-
     const { serviceName, subService } = route.params || {};
 
     const [description, setDescription] = useState("");
     const [notes, setNotes] = useState("");
+    const isFormValid = description.trim() && selectedAddress;
 
-    const handleBooking = () => {
+    const handleBooking = async () => {
         if (!description) {
             alert("Please describe your problem");
+            return;
+        }
+
+        if (!selectedAddress) {
+            alert("Please select address");
             return;
         }
 
@@ -38,13 +44,18 @@ export default function FinalScreen() {
             subService,
             description,
             notes,
+            address: selectedAddress,
             status: "OPEN",
         };
 
-        console.log("Booking Payload:", payload);
+        const res = await createBooking(payload);
 
+        if (!res.success) {
+            alert(res.message);
+            return;
+        }
 
-        alert("✅ Booking Confirmed!");
+        alert("Booking Confirmed!");
 
         navigation.navigate("ActivityScreen");
     };
@@ -113,9 +124,16 @@ export default function FinalScreen() {
 
             </ScrollView>
 
-            {/* 🔹 Bottom Button */}
+
             <View style={styles.footer}>
-                <TouchableOpacity style={styles.button} onPress={handleBooking}>
+                <TouchableOpacity
+                    style={[
+                        styles.button,
+                        !isFormValid && { backgroundColor: "#ccc" } // disabled color
+                    ]}
+                    onPress={handleBooking}
+                    disabled={!isFormValid}
+                >
                     <Text style={styles.buttonText}>Book Service</Text>
                 </TouchableOpacity>
             </View>

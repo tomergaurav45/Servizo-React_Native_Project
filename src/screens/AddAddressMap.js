@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { saveAddress } from "../apis/authApi";
@@ -82,14 +83,6 @@ export default function AddAddressMap({ navigation }) {
         );
     }
 
-    let MapView;
-    let Marker = null;
-
-    if (Platform.OS !== "web") {
-        const Maps = eval("require")("react-native-maps"); 
-        MapView = Maps.default;
-        Marker = Maps.Marker;
-    }
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
@@ -120,7 +113,7 @@ export default function AddAddressMap({ navigation }) {
                         <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
                     </TouchableOpacity>
 
-                    {Platform.OS !== "web" && MapView && (
+                    {Platform.OS !== "web" && (
                         <MapView
                             ref={mapRef}
                             style={styles.map}
@@ -411,7 +404,7 @@ const styles = StyleSheet.create({
         zIndex: 9999,
         elevation: 10,
 
-        backgroundColor: "rgba(0, 0, 0, 0.25)", // 👈 glass effect
+        backgroundColor: "rgba(0, 0, 0, 0.25)",
         width: 42,
         height: 42,
         borderRadius: 21,

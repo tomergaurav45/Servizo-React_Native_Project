@@ -51,6 +51,9 @@ export default function ManageAddressScreen() {
                 : item.type,
             fullAddress: item.fullAddress,
             landmark: item.landmark,
+            latitude: item.latitude,
+            longitude: item.longitude,
+            city: item.city,
           });
         }
 
@@ -66,10 +69,10 @@ export default function ManageAddressScreen() {
             : item.type}
         </Text>
 
-        {/* ❗ Prevent delete click from triggering selection */}
+       
         <TouchableOpacity
           onPress={(e) => {
-            e.stopPropagation(); // 🔥 IMPORTANT
+            e.stopPropagation(); 
             setSelectedAddressId(item._id);
             setShowDeleteAlert(true);
           }}

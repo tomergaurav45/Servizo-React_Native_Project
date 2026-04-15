@@ -17,5 +17,6 @@ export const AUTH_ENDPOINTS = {
   DELETE_ADDRESSES: `${BASE_URL}/delete-address`,
   CHANGE_PASSWORD: `${BASE_URL}/change-password`,
   CREATE_ISSUES: `${BASE_URL}/create-issue`,
-  GET_SERVICES: `${BASE_URL}/services`
+  GET_SERVICES: `${BASE_URL}/services`,
+  CREATE_BOOKING: `${BASE_URL}/create-booking`
 };

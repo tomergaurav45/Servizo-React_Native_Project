@@ -378,3 +378,32 @@ export const getServices = async () => {
     };
   }
 };
+
+export const createBooking = async (payload) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.CREATE_BOOKING, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Booking failed",
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while creating booking",
+    };
+  }
+};
