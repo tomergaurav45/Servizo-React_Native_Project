@@ -2,21 +2,28 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import {
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 import { COLORS, SIZES } from "../utils/constants";
 
-export default function ServizoDatePicker({ label, value, onChange }) {
+export default function ServizoDatePicker({
+  label,
+  value,
+  onChange,
+  required = false,
+}) {
   const [show, setShow] = useState(false);
 
+
   const handleChange = (event, selectedDate) => {
-    setShow(false);
+    if (Platform.OS === "android") {
+      setShow(false);
+    }
 
     if (selectedDate) {
       const formatted = selectedDate.toISOString().split("T")[0];
@@ -24,22 +31,39 @@ export default function ServizoDatePicker({ label, value, onChange }) {
     }
   };
 
+
+  const formatDisplayDate = (date) => {
+    if (!date) return "Select Date";
+
+    const d = new Date(date);
+    return d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
 
-      {/* WEB DATE INPUT */}
+
       {Platform.OS === "web" ? (
-        <TextInput
-          style={styles.inputContainer}
-          value={value}
-          onChangeText={onChange}
-          placeholder="Select Date"
+        <input
+          type="date"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          style={styles.webInput}
+          max={new Date().toISOString().split("T")[0]} // ❌ future dates blocked
         />
       ) : (
         <>
+
           <TouchableOpacity
-            style={styles.inputContainer}
+            style={[
+              styles.inputContainer,
+              required && !value && { borderColor: "red", borderWidth: 1 },
+            ]}
             onPress={() => setShow(true)}
           >
             <Ionicons
@@ -49,20 +73,32 @@ export default function ServizoDatePicker({ label, value, onChange }) {
               style={styles.icon}
             />
 
-            <Text style={styles.text}>
-              {value || "Select Date"}
+            <Text
+              style={[
+                styles.text,
+                !value && { color: "#999" }
+              ]}
+            >
+              {formatDisplayDate(value)}
             </Text>
           </TouchableOpacity>
+
 
           {show && (
             <DateTimePicker
               value={value ? new Date(value) : new Date()}
               mode="date"
               display="spinner"
+              maximumDate={new Date()} // ❌ no future date
               onChange={handleChange}
             />
           )}
         </>
+      )}
+
+
+      {required && !value && (
+        <Text style={styles.errorText}>Please select date</Text>
       )}
     </View>
   );
@@ -102,5 +138,20 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 15,
     color: COLORS.textDark,
+  },
+
+  webInput: {
+    height: 48,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    fontSize: 14,
+  },
+
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
 });
