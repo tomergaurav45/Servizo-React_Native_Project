@@ -2,6 +2,7 @@ import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import {
     Image,
+    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
@@ -9,6 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 //import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -30,41 +32,41 @@ export default function AddAddressMap({ navigation }) {
     const { user } = useAuth();
 
     const getAddressFromCoords = async (coords) => {
-    try {
-        setLoading(true);
+        try {
+            setLoading(true);
 
-        const reverse = await Location.reverseGeocodeAsync(coords);
+            const reverse = await Location.reverseGeocodeAsync(coords);
 
-        if (reverse.length > 0) {
-            const place = reverse[0];
+            if (reverse.length > 0) {
+                const place = reverse[0];
 
-            const fullAddress = [
-                place.name,
-                place.street,
-                place.city,
-                place.region,
-                place.country,
-            ]
-                .filter(Boolean)
-                .join(", ");
+                const fullAddress = [
+                    place.name,
+                    place.street,
+                    place.city,
+                    place.region,
+                    place.country,
+                ]
+                    .filter(Boolean)
+                    .join(", ");
 
-            setAddress(fullAddress);
+                setAddress(fullAddress);
 
-            // 🔥 IMPORTANT FIX
-            setLocation({
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                city: place.city || place.subregion || "",
-                state: place.region || "",
-                pincode: place.postalCode || "",
-            });
+              
+                setLocation({
+                    latitude: coords.latitude,
+                    longitude: coords.longitude,
+                    city: place.city || place.subregion || "",
+                    state: place.region || "",
+                    pincode: place.postalCode || "",
+                });
+            }
+        } catch (err) {
+            console.log("Geocode Error:", err);
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        console.log("Geocode Error:", err);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
     const getCurrentLocation = async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
@@ -96,182 +98,188 @@ export default function AddAddressMap({ navigation }) {
             </View>
         );
     }
-   
+
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={styles.container}>
-                <View style={styles.mapContainer}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={80}
+            >
+                <View style={styles.container}>
+                    <View style={styles.mapContainer}>
 
-                    <TouchableOpacity style={styles.logoBtn}>
-                        <Image
-                            source={require("../../assets/images/icon1.png")}
-                            style={styles.logo}
-                            resizeMode="contain"
-                        />
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.logoBtn}>
+                            <Image
+                                source={require("../../assets/images/icon1.png")}
+                                style={styles.logo}
+                                resizeMode="contain"
+                            />
+                        </TouchableOpacity>
 
 
 
 
-                    <TouchableOpacity
-                        style={styles.closeBtn}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Text style={styles.closeText}>✕</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.currentLocationBtn}
-                        onPress={getCurrentLocation}
-                    >
-                        <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
-                    </TouchableOpacity>
-
-                    {Platform.OS !== "web" && MapView && (
-                        <MapView
-                            ref={mapRef}
-                            style={styles.map}
-                            initialRegion={{
-                                latitude: location?.latitude || 28.6139,
-                                longitude: location?.longitude || 77.2090,
-                                latitudeDelta: 0.01,
-                                longitudeDelta: 0.01,
-                            }}
-                            onRegionChangeComplete={(region) => {
-                                const coords = {
-                                    latitude: region.latitude,
-                                    longitude: region.longitude,
-                                };
-
-                                setLocation(coords);
-                                getAddressFromCoords(coords);
-                            }}
+                        <TouchableOpacity
+                            style={styles.closeBtn}
+                            onPress={() => navigation.goBack()}
                         >
-                            {location && <Marker coordinate={location} />}
-                        </MapView>
-                    )}
+                            <Text style={styles.closeText}>✕</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.currentLocationBtn}
+                            onPress={getCurrentLocation}
+                        >
+                            <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
+                        </TouchableOpacity>
+
+                        {Platform.OS !== "web" && MapView && (
+                            <MapView
+                                ref={mapRef}
+                                style={styles.map}
+                                initialRegion={{
+                                    latitude: location?.latitude || 28.6139,
+                                    longitude: location?.longitude || 77.2090,
+                                    latitudeDelta: 0.01,
+                                    longitudeDelta: 0.01,
+                                }}
+                                onRegionChangeComplete={(region) => {
+                                    const coords = {
+                                        latitude: region.latitude,
+                                        longitude: region.longitude,
+                                    };
+
+                                    setLocation(coords);
+                                    getAddressFromCoords(coords);
+                                }}
+                            >
+                                {location && <Marker coordinate={location} />}
+                            </MapView>
+                        )}
 
 
-                    <View style={styles.markerFixed}>
-                        <Text style={{ fontSize: 30 }}>📍</Text>
+                        <View style={styles.markerFixed}>
+                            <Text style={{ fontSize: 30 }}>📍</Text>
+                        </View>
+
+                    </View>
+
+
+                    <View style={styles.formContainer}>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+
+                            <View style={styles.formCard}>
+
+                                <Text style={styles.title}>Selected Location</Text>
+
+                                <Text style={styles.address}>
+                                    {loading ? "Fetching..." : address}
+                                </Text>
+
+                                <ServizoInput
+                                    label="House / Flat Number"
+                                    placeholder="Enter house number"
+                                    icon="home-outline"
+                                    value={house}
+                                    onChangeText={setHouse}
+                                />
+
+                                <ServizoInput
+                                    label="Landmark"
+                                    placeholder="Enter landmark"
+                                    icon="location-outline"
+                                    value={landmark}
+                                    onChangeText={setLandmark}
+                                />
+
+                                <ServizoDropdown
+                                    label="Save as"
+                                    icon="bookmark-outline"
+                                    data={["Home", "Other"]}
+                                    value={tag}
+                                    onSelect={(value) => {
+                                        setTag(value);
+
+                                        if (value !== "Other") {
+                                            setCustomTag("");
+                                        }
+                                    }}
+                                />
+
+                                {tag === "Other" && (
+                                    <ServizoInput
+                                        label="Enter Place Name"
+                                        placeholder="e.g. Office, Gym, Friend's Home"
+                                        icon="create-outline"
+                                        value={customTag}
+                                        onChangeText={setCustomTag}
+                                    />
+                                )}
+
+                                <TouchableOpacity
+                                    style={[
+                                        styles.saveBtn,
+                                        { opacity: house ? 1 : 0.5 }
+                                    ]}
+                                    disabled={!house}
+                                    onPress={async () => {
+
+                                        if (!house) return;
+                                        if (tag === "Other" && !customTag.trim()) {
+                                            Toast.show({
+                                                type: "info",
+                                                text1: "Missing Field",
+                                                text2: "Please enter place name",
+                                            });
+                                            return;
+                                        }
+
+                                        const payload = {
+                                            userId: user?.userId,
+                                            fullAddress: address,
+                                            landmark,
+                                            type: tag === "Other" ? "Other" : tag,
+                                            flatNumber: house,
+                                            other: customTag,
+                                            city: location?.city || "",
+                                            state: location?.state || "",
+                                            pincode: location?.pincode || "",
+                                            latitude: location?.latitude,
+                                            longitude: location?.longitude,
+                                            isDefault: false,
+                                        };
+
+                                        const res = await saveAddress(payload);
+
+                                        if (!res.success) {
+                                            Toast.show({
+                                                type: "error",
+                                                text1: "Save Failed",
+                                                text2: res.message || "Something went wrong",
+                                            });
+                                            return;
+                                        }
+
+                                        Toast.show({
+                                            type: "success",
+                                            text1: "Address Saved",
+                                            text2: "Your address has been added successfully",
+                                        });
+
+                                        navigation.goBack();
+                                    }}
+                                >
+                                    <Text style={{ color: "#fff" }}>Save Address</Text>
+                                </TouchableOpacity>
+
+                            </View>
+
+                        </ScrollView>
                     </View>
 
                 </View>
-
-
-                <View style={styles.formContainer}>
-                    <ScrollView showsVerticalScrollIndicator={false}>
-
-                        <View style={styles.formCard}>
-
-                            <Text style={styles.title}>Selected Location</Text>
-
-                            <Text style={styles.address}>
-                                {loading ? "Fetching..." : address}
-                            </Text>
-
-                            <ServizoInput
-                                label="House / Flat Number"
-                                placeholder="Enter house number"
-                                icon="home-outline"
-                                value={house}
-                                onChangeText={setHouse}
-                            />
-
-                            <ServizoInput
-                                label="Landmark"
-                                placeholder="Enter landmark"
-                                icon="location-outline"
-                                value={landmark}
-                                onChangeText={setLandmark}
-                            />
-
-                            <ServizoDropdown
-                                label="Save as"
-                                icon="bookmark-outline"
-                                data={["Home", "Other"]}
-                                value={tag}
-                                onSelect={(value) => {
-                                    setTag(value);
-
-                                    if (value !== "Other") {
-                                        setCustomTag("");
-                                    }
-                                }}
-                            />
-
-                            {tag === "Other" && (
-                                <ServizoInput
-                                    label="Enter Place Name"
-                                    placeholder="e.g. Office, Gym, Friend's Home"
-                                    icon="create-outline"
-                                    value={customTag}
-                                    onChangeText={setCustomTag}
-                                />
-                            )}
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.saveBtn,
-                                    { opacity: house ? 1 : 0.5 }
-                                ]}
-                                disabled={!house}
-                                onPress={async () => {
-
-                                    if (!house) return;
-                                    if (tag === "Other" && !customTag.trim()) {
-                                        Toast.show({
-                                            type: "info",
-                                            text1: "Missing Field",
-                                            text2: "Please enter place name",
-                                        });
-                                        return;
-                                    }
-
-                                    const payload = {
-                                        userId: user?.userId,
-                                        fullAddress: address,
-                                        landmark,
-                                        type: tag === "Other" ? "Other" : tag,
-                                        flatNumber: house,
-                                        other: customTag,
-                                       city: location?.city || "",
-state: location?.state || "",
-pincode: location?.pincode || "",
-                                        latitude: location?.latitude,
-                                        longitude: location?.longitude,
-                                        isDefault: false,
-                                    };
-
-                                    const res = await saveAddress(payload);
-
-                                    if (!res.success) {
-                                        Toast.show({
-                                            type: "error",
-                                            text1: "Save Failed",
-                                            text2: res.message || "Something went wrong",
-                                        });
-                                        return;
-                                    }
-
-                                    Toast.show({
-                                        type: "success",
-                                        text1: "Address Saved",
-                                        text2: "Your address has been added successfully",
-                                    });
-
-                                    navigation.goBack();
-                                }}
-                            >
-                                <Text style={{ color: "#fff" }}>Save Address</Text>
-                            </TouchableOpacity>
-
-                        </View>
-
-                    </ScrollView>
-                </View>
-
-            </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }

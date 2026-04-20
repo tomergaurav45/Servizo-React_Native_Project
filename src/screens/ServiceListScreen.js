@@ -28,6 +28,8 @@ const ServiceListScreen = () => {
             style={styles.card}
             onPress={() =>
                 navigation.navigate("FinalScreen", {
+                    serviceCategory: service,
+                    serviceName: item.name,
                     serviceName: service,
                     subService: item.name,
                 })

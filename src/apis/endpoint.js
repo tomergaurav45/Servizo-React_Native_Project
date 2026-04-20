@@ -1,6 +1,6 @@
 //export const BASE_URL = "http://192.168.123.208:5000/api";
 //export const BASE_URL = "http://192.168.31.62:5000/api";
-export const BASE_URL = "http://10.58.201.208:5000/api";
+export const BASE_URL = "http://10.134.112.208:5000/api";
 
 
 export const AUTH_ENDPOINTS = {
@@ -11,7 +11,7 @@ export const AUTH_ENDPOINTS = {
   FORGOT_PASSWORD_EMAIL: `${BASE_URL}/forgot-password/send-otp`,
   FORGOT_PASSWORD_RESET: `${BASE_URL}/forgot-password/reset`,
   WELCOME_MAIL: `${BASE_URL}/send-welcome-mail`,
-  SAVE_ADDRESSES: `${BASE_URL}/save-adresses`,
+  SAVE_ADDRESSES: `${BASE_URL}/save-addresses`,
   GET_ADDRESSES: `${BASE_URL}/save-adresses`,
   UPDATE_ADDRESSES: `${BASE_URL}/update-address`,
   DELETE_ADDRESSES: `${BASE_URL}/delete-address`,

@@ -23,7 +23,7 @@ export default function FinalScreen() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
 
-    const { serviceName, subService, providerId } = route.params || {};
+    const { serviceName, subService, serviceCategory, providerId } = route.params || {};
 
     const [description, setDescription] = useState("");
     const [notes, setNotes] = useState("");
@@ -43,9 +43,16 @@ export default function FinalScreen() {
         setIsSubmitting(true);
 
         try {
+
+            const normalizedCategory =
+                serviceCategory?.toLowerCase().includes("clean")
+                    ? "Cleaning"
+                    : serviceCategory;
+
             const payload = {
                 userId: user?.userId,
                 serviceName,
+                serviceCategory: normalizedCategory,
                 subService,
                 description,
                 notes,
@@ -121,7 +128,6 @@ export default function FinalScreen() {
                         style={styles.input}
                     />
                 </View>
-
 
                 <TouchableOpacity
                     style={styles.card}

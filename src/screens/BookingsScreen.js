@@ -9,10 +9,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { acceptBooking, getProviderRequests } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
-
 
 const T = {
   bg: "#0f0f10",
@@ -60,20 +60,7 @@ const TAB_STATUS = {
   pending: "Waiting",
 };
 
-// ─── Mock job data ──────────────────────────────────────────────────────────
-const MOCK_JOB = (isSeeker, status) => ({
-  service: "Plumbing",
-  jobType: "Repair",
-  price: 500,
-  location: "Sector 15, Noida",
-  date: "29 Mar • 10:30 AM",
-  userName: isSeeker ? "Ramesh Kumar" : "Priya Sharma",
-  phone: "9528588923",
-  description: "Pipe leakage in kitchen sink area — water seeping under cabinet.",
-  status,
-});
 
-// ─── Main Screen ───────────────────────────────────────────────────────────
 export default function BookingScreen() {
   const { user } = useAuth();
   const isSeeker = user?.role === "customer";
@@ -82,6 +69,9 @@ export default function BookingScreen() {
   const [activeTab, setActiveTab] = useState("");
   const [selectedJob, setSelectedJob] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  // const cfg = STATUS_CONFIG[mapStatus(selectedJob?.status)];
 
   useFocusEffect(
     useCallback(() => {
@@ -89,21 +79,65 @@ export default function BookingScreen() {
     }, [user])
   );
 
-  const openModal = (status) => {
-    setSelectedJob(MOCK_JOB(isSeeker, status));
+  useFocusEffect(
+    useCallback(() => {
+      const fetchJobs = async () => {
+        setLoading(true);
+
+        const res = await getProviderRequests(user?.userId);
+
+        if (res.success) {
+          setJobs(res.data || []);
+        } else {
+          setJobs([]);
+        }
+
+        setLoading(false);
+      };
+
+      fetchJobs();
+
+      setActiveTab(isSeeker ? "requests" : "pending");
+    }, [user])
+  );
+
+  const openModal = (job) => {
+    setSelectedJob(job);
     setShowModal(true);
   };
 
   const renderContent = () => {
-    const status = TAB_STATUS[activeTab];
-    if (!status) return null;
-    return (
+    if (loading) return <Text style={{ color: "#fff" }}>Loading...</Text>;
+
+    let filteredJobs = jobs;
+
+    if (!isSeeker) {
+      if (activeTab === "pending") {
+        filteredJobs = jobs.filter(j => j.status === "OPEN");
+      }
+      if (activeTab === "accepted") {
+        filteredJobs = jobs.filter(j => j.status === "ASSIGNED");
+      }
+    }
+
+    if (filteredJobs.length === 0) {
+      return <Text style={{ color: "#fff" }}>No jobs available</Text>;
+    }
+
+    return filteredJobs.map((job, index) => (
       <ActivityCard
-        status={status}
+        key={index}
+        job={job}
         isSeeker={isSeeker}
-        onView={() => openModal(status)}
+        onView={() => openModal(job)}
       />
-    );
+    ));
+  };
+
+  const mapStatus = (status) => {
+    if (status === "OPEN") return "Waiting";
+    if (status === "ASSIGNED") return "Accepted";
+    return "Pending";
   };
 
   return (
@@ -170,9 +204,11 @@ export default function BookingScreen() {
             <View style={styles.modalHead}>
               <View style={styles.modalHeadLeft}>
                 <Text style={styles.modalService}>
-                  {selectedJob?.service}
+                  {selectedJob?.serviceName}
                 </Text>
-                <Text style={styles.modalJobType}>{selectedJob?.jobType}</Text>
+                <Text style={styles.modalJobType}>
+                  {selectedJob?.subService}
+                </Text>
               </View>
               <View style={styles.modalPriceBox}>
                 <Text style={styles.modalPriceLabel}>Total</Text>
@@ -182,7 +218,7 @@ export default function BookingScreen() {
 
             {/* Status pill */}
             {selectedJob?.status && (() => {
-              const cfg = STATUS_CONFIG[selectedJob.status] || STATUS_CONFIG.Pending;
+              const cfg = STATUS_CONFIG[mapStatus(selectedJob?.status)];
               return (
                 <View style={[styles.statusPill, { backgroundColor: cfg.bg, borderColor: cfg.color + "40" }]}>
                   <View style={[styles.statusDot, { backgroundColor: cfg.color }]} />
@@ -195,20 +231,33 @@ export default function BookingScreen() {
 
             <View style={styles.modalDivider} />
 
-            {/* Info rows */}
-            <InfoRow icon="📍" label="Location" value={selectedJob?.location} />
-            <InfoRow icon="📅" label="Scheduled" value={selectedJob?.date} />
 
-            <View style={styles.modalDivider} />
 
             <InfoRow
               icon="👤"
               label={isSeeker ? "Provider" : "Customer"}
-              value={selectedJob?.userName}
             />
-            <InfoRow icon="📞" label="Phone" value={selectedJob?.phone} />
+
 
             <View style={styles.modalDivider} />
+
+            <InfoRow
+              icon="📍"
+              label="Location"
+              value={selectedJob?.address?.fullAddress}
+            />
+
+            <InfoRow
+              icon="📅"
+              label="Date"
+              value={new Date(selectedJob?.createdAt).toLocaleString()}
+            />
+
+            <InfoRow
+              icon="👤"
+              label={isSeeker ? "Provider" : "Customer"}
+              value={selectedJob?.userId}
+            />
 
             <View style={styles.problemBox}>
               <Text style={styles.problemLabel}>Problem Description</Text>
@@ -224,8 +273,25 @@ export default function BookingScreen() {
               >
                 <Text style={styles.closeBtnText}>Close</Text>
               </TouchableOpacity>
-              {!isSeeker && selectedJob?.status === "Waiting" && (
-                <TouchableOpacity style={styles.acceptBtn} activeOpacity={0.85}>
+              {!isSeeker && mapStatus(selectedJob?.status) === "Waiting" && (
+                <TouchableOpacity
+                  style={styles.acceptBtn}
+                  activeOpacity={0.85}
+                  onPress={async () => {
+                    await acceptBooking({
+                      bookingId: selectedJob.bookingId,
+                      providerId: user.userId,
+                    });
+
+                    setShowModal(false);
+
+                    // 🔥 REFRESH JOBS
+                    const res = await getProviderRequests(user?.userId);
+                    if (res.success) {
+                      setJobs(res.data || []);
+                    }
+                  }}
+                >
                   <Text style={styles.acceptBtnText}>Accept Job</Text>
                 </TouchableOpacity>
               )}
@@ -249,8 +315,16 @@ const InfoRow = ({ icon, label, value }) => (
 );
 
 // ─── Activity Card ──────────────────────────────────────────────────────────
-const ActivityCard = ({ status, isSeeker, onView }) => {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.Pending;
+const ActivityCard = ({ job, isSeeker, onView }) => {
+
+  const mapStatus = (status) => {
+    if (status === "OPEN") return "Waiting";
+    if (status === "ASSIGNED") return "Accepted";
+    return "Pending";
+  };
+
+  const cfg = STATUS_CONFIG[mapStatus(job.status)];
+
 
   return (
     <View style={styles.card}>
@@ -260,8 +334,8 @@ const ActivityCard = ({ status, isSeeker, onView }) => {
       {/* Title row */}
       <View style={styles.cardHead}>
         <View>
-          <Text style={styles.cardService}>Plumbing</Text>
-          <Text style={styles.cardType}>Repair Service</Text>
+          <Text style={styles.cardService}>{job.serviceName}</Text>
+          <Text style={styles.cardType}>{job.subService}</Text>
         </View>
         <View style={[styles.cardBadge, { backgroundColor: cfg.bg, borderColor: cfg.color + "50" }]}>
           <View style={[styles.statusDot, { backgroundColor: cfg.color }]} />
@@ -273,7 +347,9 @@ const ActivityCard = ({ status, isSeeker, onView }) => {
       <View style={styles.cardMeta}>
         <View style={styles.cardMetaItem}>
           <Text style={styles.cardMetaIcon}>📍</Text>
-          <Text style={styles.cardMetaText}>Sector 15, Noida</Text>
+          <Text style={styles.cardMetaText}>
+            {job.address?.fullAddress}
+          </Text>
         </View>
         <View style={styles.cardMetaItem}>
           <Text style={styles.cardMetaIcon}>📅</Text>
@@ -301,7 +377,9 @@ const ActivityCard = ({ status, isSeeker, onView }) => {
       <View style={styles.cardFooter}>
         <View style={styles.priceTag}>
           <Text style={styles.priceTagLabel}>Amount</Text>
-          <Text style={styles.priceTagValue}>₹500</Text>
+          <Text style={styles.priceTagValue}>
+            ₹{job.price || 0}
+          </Text>
         </View>
         <TouchableOpacity
           style={styles.viewBtn}

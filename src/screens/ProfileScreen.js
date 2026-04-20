@@ -34,13 +34,6 @@ const MENU_ITEMS_TOP = [
     iconColor: "#e07a4a",
   },
   {
-    icon: "document-text-outline",
-    label: "My Activities",
-    screen: "ActivityScreen",
-    iconBg: "#e8f8f2",
-    iconColor: "#3ab07d",
-  },
-  {
     icon: "chatbubble-ellipses-outline",
     label: "My Ratings / Reviews",
     screen: "ReviewScreen",
