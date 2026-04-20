@@ -9,7 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import MapView from "react-native-maps";
+//import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { saveAddress } from "../apis/authApi";
@@ -17,6 +17,7 @@ import ServizoDropdown from "../components/ServizoDropdown";
 import ServizoInput from "../components/ServizoInput";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
+
 export default function AddAddressMap({ navigation }) {
     const mapRef = useRef(null);
     const [location, setLocation] = useState(null);
@@ -27,30 +28,43 @@ export default function AddAddressMap({ navigation }) {
     const [tag, setTag] = useState("Home");
     const [customTag, setCustomTag] = useState("");
     const { user } = useAuth();
-    const getAddressFromCoords = async (coords) => {
-        try {
-            setLoading(true);
-            const reverse = await Location.reverseGeocodeAsync(coords);
-            if (reverse.length > 0) {
-                const place = reverse[0];
-                const fullAddress = [
-                    place.name,
-                    place.street,
-                    place.city,
-                    place.region,
-                    place.country,
-                ]
-                    .filter(Boolean)
-                    .join(", ");
 
-                setAddress(fullAddress);
-            }
-        } catch (err) {
-            console.log("Geocode Error:", err);
-        } finally {
-            setLoading(false);
+    const getAddressFromCoords = async (coords) => {
+    try {
+        setLoading(true);
+
+        const reverse = await Location.reverseGeocodeAsync(coords);
+
+        if (reverse.length > 0) {
+            const place = reverse[0];
+
+            const fullAddress = [
+                place.name,
+                place.street,
+                place.city,
+                place.region,
+                place.country,
+            ]
+                .filter(Boolean)
+                .join(", ");
+
+            setAddress(fullAddress);
+
+            // 🔥 IMPORTANT FIX
+            setLocation({
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                city: place.city || place.subregion || "",
+                state: place.region || "",
+                pincode: place.postalCode || "",
+            });
         }
-    };
+    } catch (err) {
+        console.log("Geocode Error:", err);
+    } finally {
+        setLoading(false);
+    }
+};
     const getCurrentLocation = async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
@@ -82,7 +96,7 @@ export default function AddAddressMap({ navigation }) {
             </View>
         );
     }
-
+   
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
@@ -113,7 +127,7 @@ export default function AddAddressMap({ navigation }) {
                         <Text style={styles.currentLocationText}>📍 Use Current Location</Text>
                     </TouchableOpacity>
 
-                    {Platform.OS !== "web" && (
+                    {Platform.OS !== "web" && MapView && (
                         <MapView
                             ref={mapRef}
                             style={styles.map}
@@ -132,7 +146,9 @@ export default function AddAddressMap({ navigation }) {
                                 setLocation(coords);
                                 getAddressFromCoords(coords);
                             }}
-                        />
+                        >
+                            {location && <Marker coordinate={location} />}
+                        </MapView>
                     )}
 
 
@@ -219,9 +235,9 @@ export default function AddAddressMap({ navigation }) {
                                         type: tag === "Other" ? "Other" : tag,
                                         flatNumber: house,
                                         other: customTag,
-                                        city: "",
-                                        state: "",
-                                        pincode: "",
+                                       city: location?.city || "",
+state: location?.state || "",
+pincode: location?.pincode || "",
                                         latitude: location?.latitude,
                                         longitude: location?.longitude,
                                         isDefault: false,

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useState } from "react";
 import {
+    ActivityIndicator,
     ScrollView,
     StyleSheet,
     Text,
@@ -11,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { createBooking } from "../apis/authApi";
+import { acceptBooking, createBooking } from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
@@ -19,13 +20,14 @@ export default function FinalScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const [selectedAddress, setSelectedAddress] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
 
-    const { serviceName, subService } = route.params || {};
+    const { serviceName, subService, providerId } = route.params || {};
 
     const [description, setDescription] = useState("");
     const [notes, setNotes] = useState("");
-    const isFormValid = description.trim() && selectedAddress;
+    const isFormValid = description.trim() && selectedAddress && !isSubmitting;
 
     const handleBooking = async () => {
         if (!description) {
@@ -38,26 +40,62 @@ export default function FinalScreen() {
             return;
         }
 
-        const payload = {
-            userId: user?.userId,
-            serviceName,
-            subService,
-            description,
-            notes,
-            address: selectedAddress,
-            status: "OPEN",
-        };
+        setIsSubmitting(true);
 
-        const res = await createBooking(payload);
+        try {
+            const payload = {
+                userId: user?.userId,
+                serviceName,
+                subService,
+                description,
+                notes,
+                address: selectedAddress,
+                status: "OPEN",
+            };
 
-        if (!res.success) {
-            alert(res.message);
-            return;
+            const res = await createBooking(payload);
+
+            if (!res.success) {
+                alert(res.message);
+                return;
+            }
+
+            if (providerId) {
+                const createdBooking =
+                    res.data || res.booking || res.result || {};
+                const createdBookingId =
+                    createdBooking.bookingId || createdBooking._id || res.bookingId;
+
+                if (!createdBookingId) {
+                    alert("Booking created, but booking id was not returned for provider assignment.");
+                    navigation.navigate("ActivityScreen");
+                    return;
+                }
+
+                const providerRes = await acceptBooking({
+                    bookingId: createdBookingId,
+                    providerId,
+                });
+
+                if (!providerRes.success) {
+                    alert(
+                        `Booking created, but provider request failed: ${providerRes.message}`
+                    );
+                    navigation.navigate("ActivityScreen");
+                    return;
+                }
+            }
+
+            alert(
+                providerId
+                    ? "Booking confirmed and request sent to provider!"
+                    : "Booking confirmed!"
+            );
+
+            navigation.navigate("ActivityScreen");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        alert("Booking Confirmed!");
-
-        navigation.navigate("ActivityScreen");
     };
 
     return (
@@ -134,7 +172,11 @@ export default function FinalScreen() {
                     onPress={handleBooking}
                     disabled={!isFormValid}
                 >
-                    <Text style={styles.buttonText}>Book Service</Text>
+                    {isSubmitting ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={styles.buttonText}>Book Service</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

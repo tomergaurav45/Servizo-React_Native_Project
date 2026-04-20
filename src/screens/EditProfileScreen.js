@@ -29,6 +29,7 @@ export default function EditProfileScreen() {
 
   const [firstName, setFirstName] = useState(nameParts[0] || "");
   const [lastName, setLastName] = useState(nameParts.slice(1).join(" ") || "");
+  const [role, setRole] = useState(user?.role || "");
 
   useEffect(() => {
     if (role !== "provider") {
@@ -38,7 +39,7 @@ export default function EditProfileScreen() {
     }
   }, [role]);
 
-  //const [role, setRole] = useState(user?.role || "");
+  
 
   const [roleEditable, setRoleEditable] = useState(false);
   const [showRoleAlert, setShowRoleAlert] = useState(false);
@@ -50,7 +51,7 @@ export default function EditProfileScreen() {
   const [skills, setSkills] = useState(user?.skills || []);
   const [experience, setExperience] = useState(user?.experience || "");
   const [availability, setAvailability] = useState(user?.availability || "");
-  const [role, setRole] = useState(user?.role || "");
+  
   //const [phoneError, setPhoneError] = useState("");
   const [genderError, setGenderError] = useState("");
   const [dobError, setdobError] = useState("");
@@ -90,20 +91,22 @@ export default function EditProfileScreen() {
       return;
     }
 
-    if (!skills || skills.length === 0) {
-      setSkillsError("Skills are missing");
-      return;
-    }
+    if (role === "provider") {
+  if (!skills || skills.length === 0) {
+    setSkillsError("Skills are missing");
+    return;
+  }
 
-    if (!experience) {
-      setExperienceError("Experience is missing");
-      return;
-    }
+  if (!experience) {
+    setExperienceError("Experience is missing");
+    return;
+  }
 
-    if (!availability) {
-      setAvailabilityError("Availability is missing");
-      return;
-    }
+  if (!availability) {
+    setAvailabilityError("Availability is missing");
+    return;
+  }
+}
     try {
 
       const result = await registerUser({
@@ -226,14 +229,14 @@ export default function EditProfileScreen() {
             onChangeText={setLastName}
           />
 
-         <ServizoDatePicker
-  label="Date of Birth"
-  value={dob}
-  onChange={(value) => {
-    setDob(value);
-    setdobError("");
-  }}
-/>
+          <ServizoDatePicker
+            label="Date of Birth"
+            value={dob}
+            onChange={(value) => {
+              setDob(value);
+              setdobError("");
+            }}
+          />
           {dobError ? (
             <Text style={styles.errorText}>{dobError}</Text>
           ) : null}

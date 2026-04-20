@@ -1,6 +1,6 @@
 //export const BASE_URL = "http://192.168.123.208:5000/api";
 //export const BASE_URL = "http://192.168.31.62:5000/api";
-export const BASE_URL = "http://10.149.48.208:5000/api";
+export const BASE_URL = "http://10.58.201.208:5000/api";
 
 
 export const AUTH_ENDPOINTS = {
@@ -18,5 +18,7 @@ export const AUTH_ENDPOINTS = {
   CHANGE_PASSWORD: `${BASE_URL}/change-password`,
   CREATE_ISSUES: `${BASE_URL}/create-issue`,
   GET_SERVICES: `${BASE_URL}/services`,
-  CREATE_BOOKING: `${BASE_URL}/create-booking`
+  CREATE_BOOKING: `${BASE_URL}/create-booking`,
+  ACCEPT_BOOKING: `${BASE_URL}/accept`,
+  GET_PROVIDER_REQUESTS: `${BASE_URL}/provider-requests`,
 };

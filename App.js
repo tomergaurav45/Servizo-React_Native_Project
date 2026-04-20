@@ -4,7 +4,7 @@ import Toast from "react-native-toast-message";
 import { ServizoToast } from "./src/components/ServizoToast";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import BottomTabs from "./src/navigation/BottomTabs";
-import AddAddressMap from "./src/screens/AddAddressMap";
+import AddAddressMap from "./src/screens/AddAddressMap.native";
 import AllServicesScreen from "./src/screens/AllServicesScreen";
 import ChangePassword from "./src/screens/ChangePassword";
 import EditProfileScreen from "./src/screens/EditProfileScreen";

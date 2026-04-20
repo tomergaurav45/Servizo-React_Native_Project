@@ -407,3 +407,55 @@ export const createBooking = async (payload) => {
     };
   }
 };
+
+export const acceptBooking = async ({ bookingId, providerId }) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.ACCEPT_BOOKING, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ bookingId, providerId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to assign provider",
+      };
+    }
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while assigning provider",
+    };
+  }
+};
+
+export const getProviderRequests = async (providerId) => {
+  try {
+    const response = await fetch(
+      `${AUTH_ENDPOINTS.GET_PROVIDER_REQUESTS}?providerId=${encodeURIComponent(providerId)}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to fetch provider requests",
+      };
+    }
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while fetching provider requests",
+    };
+  }
+};
