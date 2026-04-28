@@ -1,12 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Image, StyleSheet, Text, TouchableOpacity, View
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { deleteAddress, getAddresses } from "../apis/authApi";
 import { ServizoAlert } from "../components/ServizoAlert";
 import ServizoBackButton from "../components/ServizoBackButton";
+import ServizoLoader from "../components/ServizoLoader";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
@@ -69,10 +73,10 @@ export default function ManageAddressScreen() {
             : item.type}
         </Text>
 
-       
+
         <TouchableOpacity
           onPress={(e) => {
-            e.stopPropagation(); 
+            e.stopPropagation();
             setSelectedAddressId(item._id);
             setShowDeleteAlert(true);
           }}
@@ -123,11 +127,10 @@ export default function ManageAddressScreen() {
   };
 
   return (
-
     <SafeAreaView style={styles.container}>
+
       <View style={styles.formCard}>
         <ServizoBackButton />
-
 
         <View style={styles.header}>
           <View style={styles.iconContainer}>
@@ -146,18 +149,26 @@ export default function ManageAddressScreen() {
           </View>
         </View>
 
-        <FlatList
-          data={addresses}
-          keyExtractor={(item) => item._id}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <Text style={{ textAlign: "center", marginTop: 20 }}>
-              No addresses found
-            </Text>
-          }
-        />
+        <View style={{ flex: 1 }}>
+          {loading ? (
+            <View style={{ marginTop: 40 }}>
+              <ServizoLoader text="Fetching addresses..." />
+            </View>
+          ) : (
+            <FlatList
+              data={addresses}
+              keyExtractor={(item) => item._id}
+              renderItem={renderItem}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <Text style={{ textAlign: "center", marginTop: 20 }}>
+                  No addresses found
+                </Text>
+              }
+            />
+          )}
+        </View>
 
         <TouchableOpacity
           style={styles.servizoBtn}
@@ -165,8 +176,10 @@ export default function ManageAddressScreen() {
         >
           <Text style={styles.servizoBtnText}>+ Add Address</Text>
         </TouchableOpacity>
-
       </View>
+
+      {/* 🔥 LOADER */}
+
 
       <ServizoAlert
         visible={showDeleteAlert}
@@ -178,12 +191,7 @@ export default function ManageAddressScreen() {
         }}
         onConfirm={handleDelete}
       />
-
-
-
     </SafeAreaView>
-
-
   );
 }
 
@@ -277,7 +285,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 13,
     color: "#777",
-    // marginTop: 2,
     marginLeft: 10,
   },
 
