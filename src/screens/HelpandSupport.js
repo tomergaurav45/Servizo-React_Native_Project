@@ -1,698 +1,658 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Image,
   Linking,
   Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { createIssue } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
 import { useAuth } from "../context/AuthContext";
-import { COLORS } from "../utils/constants";
+
+
+const C = {
+  bg: "#F7F5F0",
+  card: "#FFFFFF",
+  primary: "#1C1A17",
+  accent: "#C4AA7A",
+  muted: "#A89F8E",
+  subtext: "#7A7263",
+  body: "#5A5449",
+  border: "#EAE7E0",
+  pill: "#F0EDE7",
+  inputBg: "#F7F5F0",
+  danger: "#E53935",
+  dangerLight: "#FFF0F0",
+  success: "#0F6E56",
+  successLight: "#E1F5EE",
+};
+
+
+function SectionLabel({ icon, label }) {
+  return (
+    <View style={styles.sectionLabel}>
+      {icon && <Ionicons name={icon} size={13} color={C.muted} />}
+      <Text style={styles.sectionLabelText}>{label}</Text>
+    </View>
+  );
+}
+
+
+function FaqItem({ item, open, onToggle }) {
+  return (
+    <View style={styles.faqWrap}>
+      <TouchableOpacity style={styles.faqRow} onPress={onToggle} activeOpacity={0.8}>
+        <Ionicons
+          name="help-circle-outline"
+          size={16}
+          color={open ? C.primary : C.muted}
+        />
+        <Text style={[styles.faqQuestion, open && { color: C.primary }]}>
+          {item.question}
+        </Text>
+        <Ionicons
+          name={open ? "chevron-up" : "chevron-down"}
+          size={14}
+          color={C.muted}
+        />
+      </TouchableOpacity>
+      {open && (
+        <View style={styles.faqAnswer}>
+          <Text style={styles.faqAnswerText}>{item.answer}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+
+function OptionRow({ icon, label, onPress, accent }) {
+  return (
+    <TouchableOpacity style={styles.optionRow} onPress={onPress} activeOpacity={0.8}>
+      {icon && (
+        <View style={[styles.optionIcon, accent && { backgroundColor: accent + "22" }]}>
+          <Ionicons name={icon} size={16} color={accent || C.primary} />
+        </View>
+      )}
+      <Text style={styles.optionText}>{label}</Text>
+      <Ionicons name="chevron-forward" size={14} color={C.muted} />
+    </TouchableOpacity>
+  );
+}
+
+
+function IssueForm({ issueType, setIssueType, subject, setSubject,
+  description, setDescription, image, pickImage, onSubmit }) {
+  return (
+    <View style={{ gap: 12 }}>
+      <View style={styles.inputWrap}>
+        <Text style={styles.inputLabel}>Issue type</Text>
+        <TextInput
+          placeholder="e.g. Payment Issue"
+          placeholderTextColor={C.muted}
+          value={issueType}
+          onChangeText={setIssueType}
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.inputWrap}>
+        <Text style={styles.inputLabel}>Subject</Text>
+        <TextInput
+          placeholder="Brief subject line"
+          placeholderTextColor={C.muted}
+          value={subject}
+          onChangeText={setSubject}
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.inputWrap}>
+        <Text style={styles.inputLabel}>Description</Text>
+        <TextInput
+          placeholder="Describe your issue in detail..."
+          placeholderTextColor={C.muted}
+          value={description}
+          onChangeText={setDescription}
+          style={[styles.input, styles.inputMulti]}
+          multiline
+          textAlignVertical="top"
+        />
+      </View>
+
+      <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+        <Ionicons name="image-outline" size={16} color={C.primary} />
+        <Text style={styles.uploadText}>
+          {image ? "Change screenshot" : "Attach screenshot"}
+        </Text>
+      </TouchableOpacity>
+
+      {image && (
+        <Image source={{ uri: image }} style={styles.previewImg} />
+      )}
+
+      <TouchableOpacity style={styles.submitBtn} onPress={onSubmit}>
+        <Ionicons name="send-outline" size={15} color="#fff" />
+        <Text style={styles.submitBtnText}>Submit Issue</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+
+function PolicyContent({ type }) {
+  const terms = [
+    { heading: "Agreement", body: "Provide accurate information during registration. Use the app only for lawful purposes. Do not misuse or harm the platform." },
+    { heading: "Platform role", body: "Servizo acts as a bridge between users and service providers. We are not responsible for disputes or service quality." },
+    { heading: "Policy updates", body: "We may suspend accounts for violations and update terms anytime." },
+    { heading: "Contact", body: "support@servizo.com" },
+  ];
+  const privacy = [
+    { heading: "Data collection", body: "We collect name, phone, email, and location to provide services." },
+    { heading: "Usage", body: "Data is used to connect users with providers and improve app experience." },
+    { heading: "Privacy", body: "We do not sell your data. Limited info may be shared to fulfill services." },
+    { heading: "Control", body: "You can update or delete your account anytime." },
+    { heading: "Contact", body: "support@servizo.com" },
+  ];
+  const items = type === "terms" ? terms : privacy;
+  return (
+    <View style={{ gap: 14 }}>
+      {items.map((item, i) => (
+        <View key={i}>
+          <Text style={styles.policyHeading}>{item.heading}</Text>
+          <Text style={styles.policyBody}>{item.body}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+
+function BottomModal({ visible, onClose, type, issueProps }) {
+  const titles = {
+    issue: "Report an issue",
+    terms: "Terms & conditions",
+    privacy: "Privacy policy",
+  };
+  const icons = {
+    issue: { name: "alert-circle-outline", bg: "#FAECE7", color: "#993C1D" },
+    terms: { name: "document-text-outline", bg: "#EEEDFE", color: "#534AB7" },
+    privacy: { name: "shield-outline", bg: C.successLight, color: C.success },
+  };
+  const ico = icons[type] || icons.issue;
+
+  return (
+    <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.modalBackdrop} onPress={onClose}>
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+
+          <View style={styles.modalHeaderRow}>
+            <View style={[styles.modalHeaderIcon, { backgroundColor: ico.bg }]}>
+              <Ionicons name={ico.name} size={20} color={ico.color} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.modalTitle}>{titles[type]}</Text>
+              <Text style={styles.modalSub}>
+                Powered by <Text style={{ color: C.primary, fontWeight: "600" }}>Servizo</Text>
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.modalDivider} />
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+            {type === "issue" ? (
+              <IssueForm {...issueProps} />
+            ) : (
+              <PolicyContent type={type} />
+            )}
+          </ScrollView>
+
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <Text style={styles.closeBtnText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
+
+const FAQS = [
+  { question: "How to book a service?", answer: "Go to home → select service → choose provider → confirm booking." },
+  { question: "How to cancel a request?", answer: "Go to My Activity → open your request → click cancel." },
+  { question: "How to contact provider?", answer: "Open your booking → use call or chat option." },
+];
 
 const HelpSupportScreen = () => {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
+  const [openIndex, setOpenIndex] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
+
   const [issueType, setIssueType] = useState("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
-  const [openIndex, setOpenIndex] = useState(null);
 
-  const faqs = [
-    {
-      question: "How to book a service?",
-      answer: "Go to home → select service → choose provider → confirm booking.",
-    },
-    {
-      question: "How to cancel a request?",
-      answer: "Go to My Activity → open your request → click cancel.",
-    },
-    {
-      question: "How to contact provider?",
-      answer: "Open your booking → use call or chat option.",
-    },
-  ];
-
-  const filteredFaqs = faqs.filter(item =>
-    item.question.toLowerCase().includes(search.toLowerCase())
+  const filtered = FAQS.filter((f) =>
+    f.question.toLowerCase().includes(search.toLowerCase())
   );
 
-  const { user } = useAuth();
-
+  const openModal = (type) => { setModalType(type); setShowModal(true); };
 
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      alert("Permission required to access gallery");
-      return;
-    }
-
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { alert("Permission required to access gallery"); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
     });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
+    if (!result.canceled) setImage(result.assets[0].uri);
   };
 
   const handleSubmitIssue = async () => {
     if (!issueType || !subject || !description) {
-      alert("Please fill all fields");
+      Toast.show({ type: "error", text1: "Missing Fields", text2: "Please fill all fields" });
       return;
     }
-
     try {
-      const payload = {
-        userId: user?.userId, // fallback for testing
-        issueType,
-        subject,
-        description,
-        url: image || "", // from image picker
-      };
-
-      const res = await createIssue(payload);
-
-      console.log("Issue Created:", res);
-
-      Toast.show({
-        type: "success",
-        text1: "Issue Submitted",
-        text2: "Our team will resolve it soon 🚀",
-      });
-
-      // reset form
-      setIssueType("");
-      setSubject("");
-      setDescription("");
-      setImage(null);
-
+      await createIssue({ userId: user?.userId, issueType, subject, description, url: image || "" });
+      Toast.show({ type: "success", text1: "Issue Submitted", text2: "Our team will resolve it soon" });
+      setIssueType(""); setSubject(""); setDescription(""); setImage(null);
       setShowModal(false);
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Submission Failed",
-        text2: error.message || "Something went wrong",
-      });
+    } catch (e) {
+      Toast.show({ type: "error", text1: "Submission Failed", text2: e.message || "Something went wrong" });
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.formCard}>
-
+    <SafeAreaView style={styles.safe}>
+     
+      <View style={styles.topBar}>
         <ServizoBackButton />
-        <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <Image
-              source={require("../../assets/images/icon1.png")}
-              style={styles.icon}
-              resizeMode="contain"
-            />
-          </View>
+      </View>
 
-          <View>
-            <Text style={styles.title}>Help & Support</Text>
-            <Text style={styles.subtitle}>How can we assist you today?</Text>
-          </View>
+    
+      <View style={styles.hero}>
+        <View style={styles.heroIcon}>
+          <Ionicons name="headset-outline" size={26} color="#185FA5" />
         </View>
-        <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={18} color="#777" />
-          <TextInput
-            placeholder="Search your problem..."
-            value={search}
-            onChangeText={setSearch}
-            style={styles.searchInput}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.heroLabel}>Support</Text>
+          <Text style={styles.heroTitle}>
+            Help &{" "}
+            <Text style={styles.heroTitleItalic}>Support</Text>
+          </Text>
+          <Text style={styles.heroSub}>How can we assist you today?</Text>
+        </View>
+      </View>
+
+    
+      <View style={styles.searchBox}>
+        <Ionicons name="search-outline" size={16} color={C.muted} />
+        <TextInput
+          placeholder="Search your problem..."
+          placeholderTextColor={C.muted}
+          value={search}
+          onChangeText={setSearch}
+          style={styles.searchInput}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch("")}>
+            <Ionicons name="close-circle" size={16} color={C.muted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+       
+        <SectionLabel icon="help-circle-outline" label="Frequently asked questions" />
+        <View style={styles.card}>
+          {filtered.length > 0 ? filtered.map((item, i) => (
+            <View key={i}>
+              <FaqItem
+                item={item}
+                open={openIndex === i}
+                onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+              />
+              {i < filtered.length - 1 && <View style={styles.itemDivider} />}
+            </View>
+          )) : (
+            <Text style={styles.emptyText}>No results found</Text>
+          )}
+        </View>
+
+       
+        <SectionLabel icon="call-outline" label="Contact support" />
+        <View style={styles.card}>
+          <OptionRow
+            icon="mail-outline"
+            label="Email support"
+            accent="#185FA5"
+            onPress={() => Linking.openURL("mailto:support@servizo.com")}
+          />
+          <View style={styles.itemDivider} />
+          <OptionRow
+            icon="call-outline"
+            label="Call support"
+            accent="#0F6E56"
+            onPress={() => Linking.openURL("tel:1234567890")}
           />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Report Issue */}
+        <SectionLabel icon="alert-circle-outline" label="Report an issue" />
+        <View style={styles.card}>
+          <OptionRow
+            icon="bug-outline"
+            label="Submit issue form"
+            accent="#993C1D"
+            onPress={() => openModal("issue")}
+          />
+        </View>
 
-
-          <Text style={styles.sectionTitle}>FAQs</Text>
-
-          {filteredFaqs.map((item, index) => (
-            <View key={index} style={styles.faqContainer}>
-
-              <TouchableOpacity
-                style={styles.faqItem}
-                onPress={() =>
-                  setOpenIndex(openIndex === index ? null : index)
-                }
-              >
-                <Text style={styles.faqText}>{item.question}</Text>
-                <Ionicons
-                  name={openIndex === index ? "chevron-up" : "chevron-forward"}
-                  size={16}
-                  color="#999"
-                />
-              </TouchableOpacity>
-
-              {openIndex === index && (
-                <View style={styles.faqAnswerBox}>
-                  <Text style={styles.faqAnswer}>{item.answer}</Text>
-                </View>
-              )}
-
-            </View>
-          ))}
-
-          {filteredFaqs.length === 0 && (
-            <Text style={{ textAlign: "center", color: "#999", marginTop: 10 }}>
-              No results found
-            </Text>
-          )}
-
-          {/* CONTACT SUPPORT */}
-          <Text style={styles.sectionTitle}>Contact Support</Text>
-
-          <TouchableOpacity
-            style={styles.optionItem}
-            onPress={() => Linking.openURL("mailto:support@servizo.com")}
-          >
-            <Ionicons name="mail-outline" size={18} color={COLORS.primary} />
-            <Text style={styles.optionText}>Email Support</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.optionItem}
-            onPress={() => Linking.openURL("tel:1234567890")}
-          >
-            <Ionicons name="call-outline" size={18} color={COLORS.primary} />
-            <Text style={styles.optionText}>Call Support</Text>
-          </TouchableOpacity>
-
-          {/* REPORT ISSUE */}
-          <Text style={styles.sectionTitle}>Report Issue</Text>
-
-          <TouchableOpacity
-            style={styles.optionItem}
-            onPress={() => {
-              setModalType("issue");
-              setShowModal(true);
-            }}
-          >
-            <Ionicons name="alert-circle-outline" size={18} color={COLORS.primary} />
-            <Text style={styles.optionText}>Submit Issue Form</Text>
-          </TouchableOpacity>
-
-          {/* APP INFO */}
-          <Text style={styles.sectionTitle}>App Info</Text>
-
-          <View style={styles.infoItem}>
-            <Text style={styles.infoText}>Version</Text>
-            <Text style={styles.infoValue}>1.0.0</Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.optionItem}
-            onPress={() => {
-              setModalType("terms");
-              setShowModal(true);
-            }}
-          >
-            <Text style={styles.optionText}>TERMS & CONDITIONS</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.optionItem}
-            onPress={() => {
-              setModalType("privacy");
-              setShowModal(true);
-            }}
-          >
-            <Text style={styles.optionText}>PRIVACY POLICY</Text>
-          </TouchableOpacity>
-        </ScrollView>
-        <Modal transparent animationType="slide" visible={showModal}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-
-              {/* Top Bar */}
-              <View style={styles.modalTopBar}>
-
-                <View style={styles.dragBar} />
-
-                {/* Servizo Floating Icon */}
-                <TouchableOpacity
-                  style={styles.topIcon}
-                  onPress={() => setShowModal(false)}
-                >
-                  <Image
-                    source={require("../../assets/images/icon1.png")}
-                    style={styles.topIconImg}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
-
-              {/* Header */}
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {modalType === "terms"
-                    ? "Terms & Conditions"
-                    : modalType === "privacy"
-                      ? "Privacy Policy"
-                      : "Report an Issue"}
-                </Text>
-
-                <Text style={styles.modalSub}>
-                  Powered by <Text style={{ color: COLORS.primary, fontWeight: "700" }}>Servizo</Text>
-                </Text>
-              </View>
-
-              {/* Divider */}
-              <View style={styles.divider} />
-
-              {/* Content */}
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 20 }}
-              >
-                {modalType === "terms" ? (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Agreement</Text>
-
-                    <Text style={styles.modalText}>
-                      • Provide accurate information during registration{"\n"}
-                      • Use the app only for lawful purposes{"\n"}
-                      • Do not misuse or harm the platform
-                    </Text>
-
-                    <Text style={styles.sectionTitle}>Platform Role</Text>
-                    <Text style={styles.modalText}>
-                      Servizo acts as a bridge between users and service providers. We are not responsible for disputes or service quality.
-                    </Text>
-
-                    <Text style={styles.sectionTitle}>Policy Updates</Text>
-                    <Text style={styles.modalText}>
-                      We may suspend accounts for violations and update terms anytime.
-                    </Text>
-
-                    <Text style={styles.sectionTitle}>Contact</Text>
-                    <Text style={styles.modalText}>support@servizo.com</Text>
-                  </View>
-                ) : modalType === "privacy" ? (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Data Collection</Text>
-
-                    <Text style={styles.modalText}>
-                      We collect name, phone, email, and location to provide services.
-                    </Text>
-
-                    <Text style={styles.sectionTitle}>Usage</Text>
-                    <Text style={styles.modalText}>
-                      • Connect users with providers{"\n"}
-                      • Improve app experience
-                    </Text>
-
-                    <Text style={styles.sectionTitle}>Privacy</Text>
-                    <Text style={styles.modalText}>
-                      We do not sell your data. Limited info may be shared to fulfill services.
-                    </Text>
-
-                    <Text style={styles.sectionTitle}>Control</Text>
-                    <Text style={styles.modalText}>
-                      You can update or delete your account anytime.
-                    </Text>
-
-                    <Text style={styles.sectionTitle}>Contact</Text>
-                    <Text style={styles.modalText}>support@servizo.com</Text>
-                  </View>
-                ) : (
-
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Issue Type</Text>
-                    <TextInput
-                      placeholder="e.g. Payment Issue"
-                      value={issueType}
-                      onChangeText={setIssueType}
-                      style={styles.input}
-                    />
-
-                    <Text style={styles.sectionTitle}>Subject</Text>
-                    <TextInput
-                      placeholder="Enter subject"
-                      value={subject}
-                      onChangeText={setSubject}
-                      style={styles.input}
-                    />
-
-                    <Text style={styles.sectionTitle}>Description</Text>
-                    <TextInput
-                      placeholder="Describe your issue..."
-                      value={description}
-                      onChangeText={setDescription}
-                      style={[styles.input, { height: 100 }]}
-                      multiline
-                    />
-                    <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
-                      <Ionicons name="image-outline" size={18} color={COLORS.primary} />
-                      <Text style={styles.uploadText}>
-                        {image ? "Change Screenshot" : "Upload Screenshot"}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {image && (
-                      <Image
-                        source={{ uri: image }}
-                        style={styles.previewImage}
-                      />
-                    )}
-
-                    <TouchableOpacity style={styles.submitBtn} onPress={handleSubmitIssue}>
-                      <Text style={styles.submitText}>Submit Issue</Text>
-                    </TouchableOpacity>
-                  </View>
-                )
-                }
-              </ScrollView>
-
-              {/* Close Button */}
-              <TouchableOpacity
-                style={styles.closeBtn}
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.closeText}>Close</Text>
-              </TouchableOpacity>
-
+      
+        <SectionLabel icon="information-circle-outline" label="App info" />
+        <View style={styles.card}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Version</Text>
+            <View style={styles.versionPill}>
+              <Text style={styles.versionText}>1.0.0</Text>
             </View>
           </View>
-        </Modal>
-      </View>
+          <View style={styles.itemDivider} />
+          <OptionRow
+            icon="document-text-outline"
+            label="Terms & conditions"
+            accent="#534AB7"
+            onPress={() => openModal("terms")}
+          />
+          <View style={styles.itemDivider} />
+          <OptionRow
+            icon="shield-outline"
+            label="Privacy policy"
+            accent={C.success}
+            onPress={() => openModal("privacy")}
+          />
+        </View>
+      </ScrollView>
+
+      <BottomModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        type={modalType}
+        issueProps={{ issueType, setIssueType, subject, setSubject, description, setDescription, image, pickImage, onSubmit: handleSubmitIssue }}
+      />
     </SafeAreaView>
   );
 };
 
-
-
 export default HelpSupportScreen;
 
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 20,
-  },
+  safe: { flex: 1, backgroundColor: C.bg },
+  topBar: { paddingHorizontal: 20, paddingTop: 8 },
 
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: COLORS.primary,
-  },
-
-  iconContainer: {
-    // backgroundColor: "#EEF4FF",
-    padding: 10,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-
-  header: {
+  
+  hero: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 25,
+    gap: 16,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
-
-  modalTopBar: {
-    position: "relative",
-    marginBottom: 5,
+  heroIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: "#E6F1FB",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
+  heroLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: C.muted,
+    marginBottom: 2,
   },
-
-  modalContainer: {
-    width: "100%",
-    maxHeight: "75%",
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    padding: 20,
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "300",
+    color: C.primary,
+    lineHeight: 32,
   },
-
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#222",
+  heroTitleItalic: {
+    fontStyle: "italic",
+    fontWeight: "400",
+    color: "#6B5E3F",
   },
-  faqContainer: {
-    marginBottom: 8,
-  },
+  heroSub: { fontSize: 13, color: C.subtext, marginTop: 2 },
 
-  faqAnswerBox: {
-    backgroundColor: "#f9f9f9",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 5,
-  },
-
-  faqAnswer: {
-    fontSize: 13,
-    color: "#555",
-  },
-
-  modalPrice: {
-    fontSize: 16,
-    color: COLORS.primary,
-    fontWeight: "700",
-  },
-
-  modalText: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 4,
-  },
-
-  modalStatus: {
-    fontWeight: "600",
-    color: COLORS.primary,
-  },
-
-
-
-
+  
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f1f1f1",
-    borderRadius: 12,
+    backgroundColor: C.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.border,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: C.primary,
+  },
+
+  
+  scroll: { paddingHorizontal: 16, paddingBottom: 40, paddingTop: 8 },
+
+  
+  sectionLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 20,
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  sectionLabelText: {
+    fontSize: 11,
+    fontWeight: "500",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: C.muted,
+  },
+
+  card: {
+    backgroundColor: C.card,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: C.border,
+    overflow: "hidden",
+  },
+
+  itemDivider: { height: 1, backgroundColor: C.border, marginHorizontal: 14 },
+
+  
+  faqWrap: {},
+  faqRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 14,
+  },
+  faqQuestion: {
+    flex: 1,
+    fontSize: 14,
+    color: C.body,
+    fontWeight: "400",
+  },
+  faqAnswer: {
+    backgroundColor: C.bg,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+  },
+  faqAnswerText: { fontSize: 13, color: C.subtext, lineHeight: 19 },
+  emptyText: { textAlign: "center", color: C.muted, padding: 20, fontSize: 13 },
+
+ 
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    gap: 12,
+  },
+  optionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionText: { flex: 1, fontSize: 14, color: C.primary, fontWeight: "400" },
+
+  
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 14,
+  },
+  infoLabel: { fontSize: 14, color: C.body },
+  versionPill: {
+    backgroundColor: C.pill,
+    borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 3,
+  },
+  versionText: { fontSize: 12, color: C.subtext, fontWeight: "500" },
+
+ 
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(28,26,23,0.45)",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 36,
+    maxHeight: "82%",
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#E0DDD6",
+    borderRadius: 2,
+    alignSelf: "center",
     marginBottom: 20,
   },
-
-  searchInput: {
-    marginLeft: 8,
-    flex: 1,
-  },
-  icon: {
-    width: 70,
-    height: 70
-  },
-
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#999",
-    marginTop: 15,
-    marginBottom: 8,
-  },
-
-  faqItem: {
+  modalHeaderRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#fff",
-    padding: 12,
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 14,
+  },
+  modalHeaderIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "500", color: C.primary },
+  modalSub: { fontSize: 12, color: C.muted, marginTop: 2 },
+  modalDivider: { height: 1, backgroundColor: C.border, marginBottom: 16 },
+
+  
+  policyHeading: {
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    color: C.muted,
+    marginBottom: 4,
+  },
+  policyBody: { fontSize: 14, color: C.body, lineHeight: 21 },
+
+ 
+  inputWrap: { gap: 5 },
+  inputLabel: { fontSize: 11, fontWeight: "500", letterSpacing: 0.6, textTransform: "uppercase", color: C.muted },
+  input: {
+    backgroundColor: C.inputBg,
     borderRadius: 12,
-    marginBottom: 8,
-    elevation: 2,
-  },
-
-  faqText: {
+    borderWidth: 1,
+    borderColor: C.border,
+    padding: 13,
     fontSize: 14,
+    color: C.primary,
   },
-
+  inputMulti: { height: 100 },
   uploadBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#f1f1f1",
-    padding: 12,
-    borderRadius: 10,
-    marginTop: 5,
-  },
-
-  uploadText: {
-    color: COLORS.primary,
-    fontWeight: "500",
-  },
-
-  previewImage: {
-    width: "100%",
-    height: 150,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-
-  optionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
+    backgroundColor: C.inputBg,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderStyle: "dashed",
     borderRadius: 12,
-    marginBottom: 8,
-    backgroundColor: "#fff",
-    elevation: 2,
-    gap: 10,
+    padding: 13,
   },
-
-  optionText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-
-  infoItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 12,
-  },
-
-  infoText: {
-    color: "#777",
-  },
-
-  infoValue: {
-    fontWeight: "600",
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 20,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: "#777",
-    marginTop: 2,
-  },
-
-  formCard: {
-    flex: 1,
-    backgroundColor: COLORS.background2,
-    borderRadius: 20,
-    padding: 15,
-
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  dragBar: {
-    width: 50,
-    height: 5,
-    backgroundColor: "#ccc",
-    borderRadius: 10,
-    alignSelf: "center",
-    marginBottom: 10,
-  },
-
-  closeBtn: {
-    marginTop: 10,
-    backgroundColor: COLORS.primary,
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  closeText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
-  modalTopBar: {
-    position: "relative",
-    marginBottom: 5,
-  },
-
-  topIcon: {
-    position: "absolute",
-    right: 0,
-    top: -10,
-    backgroundColor: "#fff",
-    padding: 6,
-    borderRadius: 12,
-
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 5,
-  },
-
-  topIconImg: {
-    width: 40,
-    height: 40,
-  },
-
-  modalHeader: {
-    marginBottom: 10,
-  },
-
-  modalSub: {
-    fontSize: 12,
-    color: "#777",
-    marginTop: 2,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: "#eee",
-    marginVertical: 10,
-  },
-
-  section: {
-    marginTop: 10,
-  },
-
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#999",
-    marginBottom: 5,
-  },
-  input: {
-    backgroundColor: "#f1f1f1",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-  },
-
+  uploadText: { fontSize: 13, color: C.primary, fontWeight: "500" },
+  previewImg: { width: "100%", height: 150, borderRadius: 12 },
   submitBtn: {
-    marginTop: 15,
-    backgroundColor: COLORS.primary,
-    padding: 14,
-    borderRadius: 10,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: C.primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginTop: 4,
   },
+  submitBtnText: { color: "#fff", fontSize: 14, fontWeight: "500" },
 
-  submitText: {
-    color: "#fff",
-    fontWeight: "600",
+ 
+  closeBtn: {
+    backgroundColor: C.bg,
+    borderRadius: 14,
+    paddingVertical: 13,
+    alignItems: "center",
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: C.border,
   },
+  closeBtnText: { color: C.body, fontSize: 14 },
 });

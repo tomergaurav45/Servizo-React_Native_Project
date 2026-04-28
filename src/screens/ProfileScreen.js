@@ -5,7 +5,6 @@ import { useCallback, useState } from "react";
 import {
   Alert,
   Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -148,10 +147,7 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+    
 
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
@@ -278,7 +274,7 @@ export default function ProfileScreen({ navigation }) {
             logout();
           }}
         />
-      </ScrollView>
+    
     </SafeAreaView>
   );
 }
