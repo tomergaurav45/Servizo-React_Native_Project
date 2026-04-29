@@ -470,3 +470,71 @@ export const getUserBookings = async (userId) => {
     return { success: false, message: "Network error" };
   }
 };
+
+export const completeBooking = async (data) => {
+  try {
+    const res = await fetch(`${AUTH_ENDPOINTS.COMPLETE_BOOKING}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    return await res.json();
+  } catch (err) {
+    return { success: false };
+  }
+};
+
+export const addReview = async (payload) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.ADD_REVIEW, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to add review",
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while adding review",
+    };
+  }
+};
+
+export const getProviderReviews = async (providerId) => {
+  try {
+    const response = await fetch(
+      `${AUTH_ENDPOINTS.GET_PROVIDER_REVIEWS}?providerId=${encodeURIComponent(providerId)}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to fetch reviews",
+      };
+    }
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Network error while fetching reviews",
+    };
+  }
+};

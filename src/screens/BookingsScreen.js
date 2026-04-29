@@ -1,4 +1,4 @@
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import {
   Modal,
@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { acceptBooking, getProviderRequests, getUserBookings } from "../apis/authApi";
+import { acceptBooking, completeBooking, getProviderRequests, getUserBookings } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -71,11 +71,11 @@ export default function BookingScreen() {
   const [showModal, setShowModal] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+  const navigation = useNavigation();
 
   useFocusEffect(
     useCallback(() => {
-      setActiveTab(isSeeker ? "requests" : "pending"); ``
+      setActiveTab(isSeeker ? "requests" : "pending");
     }, [user])
   );
 
@@ -103,7 +103,7 @@ export default function BookingScreen() {
 
       fetchJobs();
 
-      
+
     }, [user])
   );
 
@@ -117,7 +117,7 @@ export default function BookingScreen() {
 
     let filteredJobs = jobs;
 
-   
+
     if (isSeeker) {
       if (activeTab === "requests") {
         filteredJobs = jobs.filter(j => j.status === "OPEN");
@@ -130,7 +130,7 @@ export default function BookingScreen() {
       }
     }
 
-  
+
     if (!isSeeker) {
       if (activeTab === "pending") {
         filteredJobs = jobs.filter(j => j.status === "OPEN");
@@ -164,6 +164,7 @@ export default function BookingScreen() {
   const mapStatus = (status) => {
     if (status === "OPEN") return "Waiting";
     if (status === "ASSIGNED") return "Accepted";
+    if (status === "COMPLETED") return "Done"; // ✅ ADD THIS
     return "Pending";
   };
 
@@ -174,10 +175,10 @@ export default function BookingScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-     
+
         <ServizoBackButton />
 
-      
+
         <View style={styles.pageHeader}>
           <View>
             <Text style={styles.pageEyebrow}>
@@ -194,7 +195,7 @@ export default function BookingScreen() {
           </View>
         </View>
 
-       
+
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -218,11 +219,11 @@ export default function BookingScreen() {
           })}
         </ScrollView>
 
-       
+
         <View style={styles.contentArea}>{renderContent()}</View>
       </ScrollView>
 
-     
+
       <Modal transparent animationType="slide" visible={showModal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
@@ -300,7 +301,7 @@ export default function BookingScreen() {
               }
             />
 
-          
+
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.closeBtn}
@@ -336,8 +337,50 @@ export default function BookingScreen() {
                 >
                   <Text style={styles.acceptBtnText}>Accept Job</Text>
                 </TouchableOpacity>
+
               )}
+              {!isSeeker && mapStatus(selectedJob?.status) === "Accepted" && (
+                <TouchableOpacity
+                  style={[styles.acceptBtn, { backgroundColor: "#4ade80" }]}
+                  onPress={async () => {
+                    await completeBooking({
+                      bookingId: selectedJob.bookingId,
+                      providerId: user.userId,
+                    });
+
+                    setShowModal(false);
+
+                    let res;
+
+                    if (isSeeker) {
+                      res = await getUserBookings(user?.userId);
+                    } else {
+                      res = await getProviderRequests(user?.userId);
+                    }
+
+                    if (res.success) {
+                      setJobs(res.data || []);
+                    }
+                  }}
+                >
+                  <Text style={styles.acceptBtnText}>Mark as Completed</Text>
+                </TouchableOpacity>
+              )}
+                   {isSeeker && mapStatus(selectedJob?.status) === "Done" && (
+  <TouchableOpacity
+    style={[styles.acceptBtn, { backgroundColor: "#60a5fa" }]}
+    onPress={() => {
+      setShowModal(false);
+      navigation.navigate("ReviewScreen", {
+        booking: selectedJob,
+      });
+    }}
+  >
+    <Text style={styles.acceptBtnText}>Give Review</Text>
+  </TouchableOpacity>
+)}
             </View>
+       
           </View>
         </View>
       </Modal>
@@ -362,6 +405,7 @@ const ActivityCard = ({ job, isSeeker, onView }) => {
   const mapStatus = (status) => {
     if (status === "OPEN") return "Waiting";
     if (status === "ASSIGNED") return "Accepted";
+    if (status === "COMPLETED") return "Done";
     return "Pending";
   };
 
@@ -821,3 +865,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
+
+

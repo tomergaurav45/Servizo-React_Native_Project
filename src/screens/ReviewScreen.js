@@ -1,17 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    FlatList,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getProviderReviews } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
-
 
 const C = {
   bg: "#F7F5F0",
@@ -191,29 +191,58 @@ const TABS = [
   { key: "negative", label: "Negative", icon: "thumbs-down-outline" },
 ];
 
-const REVIEWS = [
-  { id: "1", name: "Amit Sharma", rating: 5, comment: "Excellent service, very professional! Will definitely hire again.", date: "2 days ago" },
-  { id: "2", name: "Priya Verma", rating: 2, comment: "Service was late and not satisfactory. Expected better quality.", date: "1 week ago" },
-  { id: "3", name: "Ravi Mehta", rating: 4, comment: "Good work overall, arrived on time and was polite.", date: "2 weeks ago" },
-  { id: "4", name: "Sneha Kapoor", rating: 3, comment: "Average experience. Nothing special but got the job done.", date: "3 weeks ago" },
-];
+
 
 export default function ReviewScreen() {
+  const [reviews, setReviews] = useState([]);
+const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [selectedReview, setSelectedReview] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const filtered = REVIEWS.filter((r) => {
-    if (activeTab === "positive") return r.rating >= 4;
-    if (activeTab === "negative") return r.rating <= 2;
-    return true;
-  });
+  const filtered = reviews.filter((r) => {
+  if (activeTab === "positive") return r.rating >= 4;
+  if (activeTab === "negative") return r.rating <= 2;
+  return true;
+});
 
   const openModal = (review) => {
     setSelectedReview(review);
     setShowModal(true);
   };
 
+  useEffect(() => {
+  const fetchReviews = async () => {
+    setLoading(true);
+
+    // 👇 you need providerId (from user or route)
+    const providerId = "User001"; // replace dynamically later
+
+    const res = await getProviderReviews(providerId);
+
+    if (res.success) {
+      // map API data to UI format
+      const formatted = res.data.reviews.map((r, i) => ({
+        id: i.toString(),
+        name: r.userName || "User",
+        rating: r.rating,
+        comment: r.comment,
+        date: new Date(r.createdAt).toLocaleDateString(),
+      }));
+
+      setReviews(formatted);
+    } else {
+      setReviews([]);
+    }
+
+    setLoading(false);
+  };
+
+  fetchReviews();
+}, []);
+
+
+if (loading) {
   return (
     <SafeAreaView style={styles.safe}>
       
@@ -233,7 +262,7 @@ export default function ReviewScreen() {
 
      
       <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-        <RatingSummary reviews={REVIEWS} />
+      <RatingSummary reviews={reviews} />
       </View>
 
     
@@ -282,6 +311,7 @@ export default function ReviewScreen() {
       />
     </SafeAreaView>
   );
+}
 }
 
 

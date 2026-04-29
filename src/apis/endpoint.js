@@ -22,4 +22,7 @@ export const AUTH_ENDPOINTS = {
   ACCEPT_BOOKING: `${BASE_URL}/accept`,
   GET_PROVIDER_REQUESTS: `${BASE_URL}/provider-requests`,
   GET_USER_BOOKINGS: `${BASE_URL}/user-bookings`,
+  COMPLETE_BOOKING: `${BASE_URL}/complete-booking`,
+  ADD_REVIEW: `${BASE_URL}/add-review`,
+GET_PROVIDER_REVIEWS: `${BASE_URL}/provider-reviews`,
 };
