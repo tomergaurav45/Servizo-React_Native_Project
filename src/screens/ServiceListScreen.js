@@ -18,9 +18,9 @@ const ServiceListScreen = () => {
 
 
     const services = [
-        { id: "1", name: "Basic Cleaning", price: "₹499" },
-        { id: "2", name: "Deep Cleaning", price: "₹999" },
-        { id: "3", name: "Premium Cleaning", price: "₹1499" },
+        { id: "1", name: "Basic Cleaning", price: 499 },
+        { id: "2", name: "Deep Cleaning", price: 999 },
+        { id: "3", name: "Premium Cleaning", price: 1499 },
     ];
 
     const renderItem = ({ item }) => (
@@ -29,9 +29,9 @@ const ServiceListScreen = () => {
             onPress={() =>
                 navigation.navigate("FinalScreen", {
                     serviceCategory: service,
-                    serviceName: item.name,
-                    serviceName: service,
+                    serviceName: service,       // main category
                     subService: item.name,
+                    price: item.price,          // ✅ ADD THIS
                 })
             }
         >

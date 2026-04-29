@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { acceptBooking, getProviderRequests } from "../apis/authApi";
+import { acceptBooking, getProviderRequests, getUserBookings } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -71,11 +71,11 @@ export default function BookingScreen() {
   const [showModal, setShowModal] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
-  // const cfg = STATUS_CONFIG[mapStatus(selectedJob?.status)];
+  
 
   useFocusEffect(
     useCallback(() => {
-      setActiveTab(isSeeker ? "requests" : "accepted");
+      setActiveTab(isSeeker ? "requests" : "pending"); ``
     }, [user])
   );
 
@@ -84,7 +84,13 @@ export default function BookingScreen() {
       const fetchJobs = async () => {
         setLoading(true);
 
-        const res = await getProviderRequests(user?.userId);
+        let res;
+
+        if (isSeeker) {
+          res = await getUserBookings(user?.userId); // 👤 CUSTOMER
+        } else {
+          res = await getProviderRequests(user?.userId); // 🛠 PROVIDER
+        }
 
         if (res.success) {
           setJobs(res.data || []);
@@ -97,7 +103,7 @@ export default function BookingScreen() {
 
       fetchJobs();
 
-      setActiveTab(isSeeker ? "requests" : "pending");
+      
     }, [user])
   );
 
@@ -111,6 +117,20 @@ export default function BookingScreen() {
 
     let filteredJobs = jobs;
 
+   
+    if (isSeeker) {
+      if (activeTab === "requests") {
+        filteredJobs = jobs.filter(j => j.status === "OPEN");
+      }
+      if (activeTab === "ongoing") {
+        filteredJobs = jobs.filter(j => j.status === "ASSIGNED");
+      }
+      if (activeTab === "completed") {
+        filteredJobs = jobs.filter(j => j.status === "COMPLETED");
+      }
+    }
+
+  
     if (!isSeeker) {
       if (activeTab === "pending") {
         filteredJobs = jobs.filter(j => j.status === "OPEN");
@@ -118,10 +138,17 @@ export default function BookingScreen() {
       if (activeTab === "accepted") {
         filteredJobs = jobs.filter(j => j.status === "ASSIGNED");
       }
+      if (activeTab === "completed") {
+        filteredJobs = jobs.filter(j => j.status === "COMPLETED");
+      }
     }
 
     if (filteredJobs.length === 0) {
-      return <Text style={{ color: "#fff" }}>No jobs available</Text>;
+      return (
+        <Text style={{ color: "#fff", textAlign: "center", marginTop: 20 }}>
+          No jobs available
+        </Text>
+      );
     }
 
     return filteredJobs.map((job, index) => (
@@ -147,10 +174,10 @@ export default function BookingScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Back */}
+     
         <ServizoBackButton />
 
-        {/* Page header */}
+      
         <View style={styles.pageHeader}>
           <View>
             <Text style={styles.pageEyebrow}>
@@ -158,14 +185,16 @@ export default function BookingScreen() {
             </Text>
             <Text style={styles.pageTitle}>My Activity</Text>
           </View>
-          {/* Decorative badge */}
+
           <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeNum}>3</Text>
+            <Text style={styles.headerBadgeNum}>
+              {jobs.length}
+            </Text>
             <Text style={styles.headerBadgeLabel}>Active</Text>
           </View>
         </View>
 
-        {/* Tabs */}
+       
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -189,11 +218,11 @@ export default function BookingScreen() {
           })}
         </ScrollView>
 
-        {/* Content */}
+       
         <View style={styles.contentArea}>{renderContent()}</View>
       </ScrollView>
 
-      {/* Detail Modal */}
+     
       <Modal transparent animationType="slide" visible={showModal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
@@ -212,7 +241,9 @@ export default function BookingScreen() {
               </View>
               <View style={styles.modalPriceBox}>
                 <Text style={styles.modalPriceLabel}>Total</Text>
-                <Text style={styles.modalPrice}>₹{selectedJob?.price}</Text>
+                <Text style={styles.modalPrice}>
+                  ₹{selectedJob?.price || 0}
+                </Text>
               </View>
             </View>
 
@@ -230,15 +261,6 @@ export default function BookingScreen() {
             })()}
 
             <View style={styles.modalDivider} />
-
-
-
-            <InfoRow
-              icon="👤"
-              label={isSeeker ? "Provider" : "Customer"}
-            />
-
-
             <View style={styles.modalDivider} />
 
             <InfoRow
@@ -256,7 +278,11 @@ export default function BookingScreen() {
             <InfoRow
               icon="👤"
               label={isSeeker ? "Provider" : "Customer"}
-              value={selectedJob?.participants?.user?.userId}
+              value={
+                isSeeker
+                  ? selectedJob?.participants?.provider?.name || "Not Assigned"
+                  : selectedJob?.participants?.user?.name
+              }
             />
 
             <View style={styles.problemBox}>
@@ -264,7 +290,17 @@ export default function BookingScreen() {
               <Text style={styles.problemText}>{selectedJob?.description}</Text>
             </View>
 
-            {/* Actions */}
+            <InfoRow
+              icon="📞"
+              label="Contact"
+              value={
+                isSeeker
+                  ? selectedJob?.participants?.provider?.phone || "Not Available"
+                  : selectedJob?.participants?.user?.phone
+              }
+            />
+
+          
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.closeBtn}
@@ -285,8 +321,14 @@ export default function BookingScreen() {
 
                     setShowModal(false);
 
-                    // 🔥 REFRESH JOBS
-                    const res = await getProviderRequests(user?.userId);
+                    let res;
+
+                    if (isSeeker) {
+                      res = await getUserBookings(user?.userId);
+                    } else {
+                      res = await getProviderRequests(user?.userId);
+                    }
+
                     if (res.success) {
                       setJobs(res.data || []);
                     }
@@ -303,7 +345,7 @@ export default function BookingScreen() {
   );
 }
 
-// ─── Info Row ───────────────────────────────────────────────────────────────
+
 const InfoRow = ({ icon, label, value }) => (
   <View style={styles.infoRow}>
     <Text style={styles.infoIcon}>{icon}</Text>
@@ -314,7 +356,7 @@ const InfoRow = ({ icon, label, value }) => (
   </View>
 );
 
-// ─── Activity Card ──────────────────────────────────────────────────────────
+
 const ActivityCard = ({ job, isSeeker, onView }) => {
 
   const mapStatus = (status) => {
@@ -324,6 +366,17 @@ const ActivityCard = ({ job, isSeeker, onView }) => {
   };
 
   const cfg = STATUS_CONFIG[mapStatus(job.status)];
+
+  const user = job?.participants?.user;
+  const provider = job?.participants?.provider;
+
+  const name = isSeeker
+    ? provider?.name
+    : user?.name;
+
+  const initials = name
+    ? name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+    : "--";
 
 
   return (
@@ -353,22 +406,27 @@ const ActivityCard = ({ job, isSeeker, onView }) => {
         </View>
         <View style={styles.cardMetaItem}>
           <Text style={styles.cardMetaIcon}>📅</Text>
-          <Text style={styles.cardMetaText}>29 Mar • 10:30 AM</Text>
+          <Text style={styles.cardMetaText}>{new Date(job.createdAt).toLocaleString()}</Text>
         </View>
       </View>
       {/* User info */}
       <View style={styles.cardUser}>
         <View style={styles.userAvatar}>
           <Text style={styles.userAvatarText}>
-            {isSeeker ? "RK" : "PS"}
+            {initials}
           </Text>
         </View>
         <View>
           <Text style={styles.userNameText}>
-            {isSeeker ? "Ramesh Kumar" : "Priya Sharma"}
+            {isSeeker
+              ? provider?.name || "Not Assigned"
+              : user?.name}
           </Text>
+
           <Text style={styles.userRoleText}>
-            {isSeeker ? "🛠 Plumber" : "📞 95XXXXXXX"}
+            {isSeeker
+              ? provider?.phone || "Waiting for provider"
+              : user?.phone}
           </Text>
         </View>
       </View>
@@ -378,7 +436,7 @@ const ActivityCard = ({ job, isSeeker, onView }) => {
         <View style={styles.priceTag}>
           <Text style={styles.priceTagLabel}>Amount</Text>
           <Text style={styles.priceTagValue}>
-            ₹{job.price || 0}
+            ₹{(job.price || 0).toLocaleString()}
           </Text>
         </View>
         <TouchableOpacity

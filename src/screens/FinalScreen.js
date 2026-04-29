@@ -23,7 +23,7 @@ export default function FinalScreen() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
 
-    const { serviceName, subService, serviceCategory, providerId } = route.params || {};
+    const { serviceName, subService, serviceCategory, providerId, price } = route.params || {};
 
     const [description, setDescription] = useState("");
     const [notes, setNotes] = useState("");
@@ -57,7 +57,7 @@ export default function FinalScreen() {
                 description,
                 notes,
                 addressId: selectedAddress?.id,
-
+                price,
             };
 
             const res = await createBooking(payload);
@@ -164,6 +164,10 @@ export default function FinalScreen() {
                         multiline
                         style={styles.input}
                     />
+                </View>
+                <View style={styles.card}>
+                    <Text style={styles.label}>Price</Text>
+                    <Text style={styles.serviceText}>₹{price}</Text>
                 </View>
 
             </ScrollView>
