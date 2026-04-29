@@ -256,7 +256,7 @@ export default function BookingScreen() {
             <InfoRow
               icon="👤"
               label={isSeeker ? "Provider" : "Customer"}
-              value={selectedJob?.userId}
+              value={selectedJob?.participants?.user?.userId}
             />
 
             <View style={styles.problemBox}>

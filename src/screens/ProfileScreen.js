@@ -147,134 +147,134 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-    
-
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
 
 
-        <View style={styles.profileCard}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
 
-          <View style={styles.deco1} />
-          <View style={styles.deco2} />
 
-          <View style={styles.profileRow}>
+      <View style={styles.profileCard}>
 
-            <TouchableOpacity onPress={pickImage} style={styles.avatarWrap}>
-              <Image
-                source={
-                  image
-                    ? { uri: image }
-                    : require("../../assets/images/avatar.png")
-                }
-                style={styles.avatar}
-              />
-              <View style={styles.cameraBtn}>
-                <Ionicons name="camera" size={11} color={COLORS.primary} />
-              </View>
-            </TouchableOpacity>
+        <View style={styles.deco1} />
+        <View style={styles.deco2} />
 
-            {/* User info */}
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{user?.name || "Your Name"}</Text>
-              <Text style={styles.profileEmail}>{user?.email || "email@example.com"}</Text>
-              <View style={styles.roleBadge}>
-                <View style={styles.roleDot} />
-                <Text style={styles.roleText}>
-                  {isProvider ? "Provider" : "Customer"}
-                </Text>
-              </View>
+        <View style={styles.profileRow}>
+
+          <TouchableOpacity onPress={pickImage} style={styles.avatarWrap}>
+            <Image
+              source={
+                image
+                  ? { uri: image }
+                  : require("../../assets/images/avatar.png")
+              }
+              style={styles.avatar}
+            />
+            <View style={styles.cameraBtn}>
+              <Ionicons name="camera" size={11} color={COLORS.primary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* User info */}
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{user?.name || "Your Name"}</Text>
+            <Text style={styles.profileEmail}>{user?.email || "email@example.com"}</Text>
+            <View style={styles.roleBadge}>
+              <View style={styles.roleDot} />
+              <Text style={styles.roleText}>
+                {isProvider ? "Provider" : "Customer"}
+              </Text>
             </View>
           </View>
-
-          {/* Stats */}
-          {isProvider && (
-            <View style={styles.statsRow}>
-              {[
-                { label: "Jobs Done", value: "24", screen: "ActivityScreen" },
-                { label: "Rating", value: "4.8", screen: "ReviewScreen" },
-                { label: "Pending", value: "3", screen: "ActivityScreen" },
-              ].map((stat, i) => (
-                <TouchableOpacity
-                  key={i}
-                  style={styles.statBox}
-                  activeOpacity={0.7}
-                  onPress={() => navigation.navigate(stat.screen)}
-                >
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
         </View>
 
-        {/* Menu Group 1 */}
-        <View style={styles.menuCard}>
-          {MENU_ITEMS_TOP.map((item, i) => (
-            <View key={item.screen}>
+        {/* Stats */}
+        {isProvider && (
+          <View style={styles.statsRow}>
+            {[
+              { label: "Jobs Done", value: "24", screen: "ActivityScreen" },
+              { label: "Rating", value: "4.8", screen: "ReviewScreen" },
+              { label: "Pending", value: "3", screen: "ActivityScreen" },
+            ].map((stat, i) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.statBox}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate(stat.screen)}
+              >
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
 
-              {renderMenuItem(item, i, MENU_ITEMS_TOP)}
+      {/* Menu Group 1 */}
+      <View style={styles.menuCard}>
+        {MENU_ITEMS_TOP.map((item, i) => (
+          <View key={item.screen}>
 
-              {item.label === "Edit Profile" && isProfileIncomplete() && (
-                <TouchableOpacity
-                  style={styles.warningCard}
-                  onPress={() => navigation.navigate("EditProfileScreen")}
-                >
-                  <Ionicons name="warning-outline" size={16} color="#fff" />
-                  <Text style={styles.warningText}>
-                    Please complete your profile
-                  </Text>
-                </TouchableOpacity>
-              )}
+            {renderMenuItem(item, i, MENU_ITEMS_TOP)}
 
-
-              {item.label === "Manage Address" && isAddressMissing() && (
-                <TouchableOpacity
-                  style={styles.warningCard}
-                  onPress={() => navigation.navigate("ManageAddressScreen")}
-                >
-                  <Ionicons name="location-outline" size={16} color="#fff" />
-                  <Text style={styles.warningText}>
-                    Please add at least one address
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-            </View>
-          ))}
-        </View>
-
-        {/* Menu Group 2 */}
-        <View style={styles.menuCard}>
-          {MENU_ITEMS_BOTTOM.map((item, i) =>
-            renderMenuItem(item, i, MENU_ITEMS_BOTTOM)
-          )}
-        </View>
-
-        {/* Logout */}
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={() => setShowLogoutAlert(true)}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="log-out-outline" size={18} color="#f8f7f4" />
-          <Text style={styles.logoutText}>Log out</Text>
-        </TouchableOpacity>
+            {item.label === "Edit Profile" && isProfileIncomplete() && (
+              <TouchableOpacity
+                style={styles.warningCard}
+                onPress={() => navigation.navigate("EditProfileScreen")}
+              >
+                <Ionicons name="warning-outline" size={16} color="#fff" />
+                <Text style={styles.warningText}>
+                  Please complete your profile
+                </Text>
+              </TouchableOpacity>
+            )}
 
 
-        <ServizoAlert
-          visible={showLogoutAlert}
-          title="Logout"
-          message="Are you sure you want to logout?"
-          onCancel={() => setShowLogoutAlert(false)}
-          onConfirm={() => {
-            setShowLogoutAlert(false);
-            logout();
-          }}
-        />
-    
+            {item.label === "Manage Address" && isAddressMissing() && (
+              <TouchableOpacity
+                style={styles.warningCard}
+                onPress={() => navigation.navigate("ManageAddressScreen")}
+              >
+                <Ionicons name="location-outline" size={16} color="#fff" />
+                <Text style={styles.warningText}>
+                  Please add at least one address
+                </Text>
+              </TouchableOpacity>
+            )}
+
+          </View>
+        ))}
+      </View>
+
+      {/* Menu Group 2 */}
+      <View style={styles.menuCard}>
+        {MENU_ITEMS_BOTTOM.map((item, i) =>
+          renderMenuItem(item, i, MENU_ITEMS_BOTTOM)
+        )}
+      </View>
+
+      {/* Logout */}
+      <TouchableOpacity
+        style={styles.logoutBtn}
+        onPress={() => setShowLogoutAlert(true)}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="log-out-outline" size={18} color="#f8f7f4" />
+        <Text style={styles.logoutText}>Log out</Text>
+      </TouchableOpacity>
+
+
+      <ServizoAlert
+        visible={showLogoutAlert}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        onCancel={() => setShowLogoutAlert(false)}
+        onConfirm={() => {
+          setShowLogoutAlert(false);
+          logout();
+        }}
+      />
+
     </SafeAreaView>
   );
 }

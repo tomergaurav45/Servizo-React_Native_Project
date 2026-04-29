@@ -56,8 +56,8 @@ export default function FinalScreen() {
                 subService,
                 description,
                 notes,
-                address: selectedAddress,
-                status: "OPEN",
+                addressId: selectedAddress?.id,
+
             };
 
             const res = await createBooking(payload);
@@ -135,7 +135,7 @@ export default function FinalScreen() {
                         navigation.navigate("ManageAddressScreen", {
                             onSelectAddress: (address) => {
                                 setSelectedAddress(address);
-                            },
+                            }
                         })
                     }
                 >
