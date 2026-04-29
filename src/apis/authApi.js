@@ -459,3 +459,14 @@ export const getProviderRequests = async (providerId) => {
     };
   }
 };
+
+export const getUserBookings = async (userId) => {
+  try {
+    const res = await fetch(
+      `${AUTH_ENDPOINTS.GET_USER_BOOKINGS}?userId=${userId}`
+    );
+    return await res.json();
+  } catch (err) {
+    return { success: false, message: "Network error" };
+  }
+};
