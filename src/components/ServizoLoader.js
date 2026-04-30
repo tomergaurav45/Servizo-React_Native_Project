@@ -62,8 +62,8 @@ export default function ServizoLoader({ text = "Loading" }) {
     spin(ring2Rotation, 1400, true);
     spin(ring3Rotation, 1800);
     pulse(dotScale, dotOpacity);
-    pulse(dotScale, dotOpacity); // keep this
-    pulse(textOpacity, textOpacity); // 🔥 fix
+    pulse(dotScale, dotOpacity); 
+    pulse(textOpacity, textOpacity); 
   }, []);
 
   const toRotate = (val) => ({
@@ -132,9 +132,6 @@ const styles = StyleSheet.create({
     right: -50,
   },
   card: {
-    backgroundColor: "rgba(255,255,255,0.07)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
     borderRadius: 20,
     paddingVertical: 32,
     paddingHorizontal: 40,

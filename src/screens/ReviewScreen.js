@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getProviderReviews } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
+import ServizoLoader from "../components/ServizoLoader";
+import { useAuth } from "../context/AuthContext";
 
 const C = {
   bg: "#F7F5F0",
@@ -195,16 +197,16 @@ const TABS = [
 
 export default function ReviewScreen() {
   const [reviews, setReviews] = useState([]);
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [selectedReview, setSelectedReview] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
+  const { user } = useAuth();
   const filtered = reviews.filter((r) => {
-  if (activeTab === "positive") return r.rating >= 4;
-  if (activeTab === "negative") return r.rating <= 2;
-  return true;
-});
+    if (activeTab === "positive") return r.rating >= 4;
+    if (activeTab === "negative") return r.rating <= 2;
+    return true;
+  });
 
   const openModal = (review) => {
     setSelectedReview(review);
@@ -212,60 +214,57 @@ const [loading, setLoading] = useState(true);
   };
 
   useEffect(() => {
-  const fetchReviews = async () => {
-    setLoading(true);
+    const fetchReviews = async () => {
+      setLoading(true);
 
-    // 👇 you need providerId (from user or route)
-    const providerId = "User001"; // replace dynamically later
+      const providerId = user?.userId;
 
-    const res = await getProviderReviews(providerId);
+      const res = await getProviderReviews(providerId);
 
-    if (res.success) {
-      // map API data to UI format
-      const formatted = res.data.reviews.map((r, i) => ({
-        id: i.toString(),
-        name: r.userName || "User",
-        rating: r.rating,
-        comment: r.comment,
-        date: new Date(r.createdAt).toLocaleDateString(),
-      }));
+      console.log("REVIEWS API:", res);
 
-      setReviews(formatted);
-    } else {
-      setReviews([]);
+      if (res.success) {
+        const formatted = res.data.reviews.map((r, i) => ({
+          id: i.toString(),
+          name: r.userName,
+          rating: r.rating,
+          comment: r.comment,
+          date: new Date(r.createdAt).toLocaleDateString(),
+        }));
+
+        setReviews(formatted);
+      } else {
+        setReviews([]);
+      }
+
+      setLoading(false);
+    };
+
+    if (user?.userId) {
+      fetchReviews();
     }
-
-    setLoading(false);
-  };
-
-  fetchReviews();
-}, []);
+  }, [user]);
 
 
-if (loading) {
   return (
     <SafeAreaView style={styles.safe}>
-      
+
       <View style={styles.topBar}>
         <ServizoBackButton />
       </View>
 
-     
       <View style={styles.hero}>
         <Text style={styles.heroLabel}>Feedback</Text>
         <Text style={styles.heroTitle}>
-          My{" "}
-          <Text style={styles.heroTitleItalic}>Reviews</Text>
+          My <Text style={styles.heroTitleItalic}>Reviews</Text>
         </Text>
         <Text style={styles.heroSub}>See what people say about you</Text>
       </View>
 
-     
       <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-      <RatingSummary reviews={reviews} />
+        <RatingSummary reviews={reviews} />
       </View>
 
-    
       <View style={styles.tabRow}>
         {TABS.map((tab) => {
           const active = activeTab === tab.key;
@@ -274,7 +273,6 @@ if (loading) {
               key={tab.key}
               style={[styles.tab, active && styles.tabActive]}
               onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.8}
             >
               <Ionicons
                 name={tab.icon}
@@ -288,30 +286,32 @@ if (loading) {
           );
         })}
       </View>
+      {loading ? (
+        <View style={{ marginTop: 40 }}>
+          <ServizoLoader text="Fetching addresses..." />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <ReviewCard item={item} onPress={openModal} />
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No reviews found</Text>
+          }
+        />
+      )}
 
-    
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <ReviewCard item={item} onPress={openModal} />
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No reviews in this category</Text>
-        }
-      />
-
-    
       <ReviewModal
         review={selectedReview}
         visible={showModal}
         onClose={() => setShowModal(false)}
       />
+
     </SafeAreaView>
   );
-}
 }
 
 

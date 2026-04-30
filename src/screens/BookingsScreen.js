@@ -5,11 +5,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { acceptBooking, completeBooking, getProviderRequests, getUserBookings } from "../apis/authApi";
+import { acceptBooking, addReview, completeBooking, getProviderRequests, getUserBookings } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -72,6 +73,9 @@ export default function BookingScreen() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -366,21 +370,89 @@ export default function BookingScreen() {
                   <Text style={styles.acceptBtnText}>Mark as Completed</Text>
                 </TouchableOpacity>
               )}
-                   {isSeeker && mapStatus(selectedJob?.status) === "Done" && (
-  <TouchableOpacity
-    style={[styles.acceptBtn, { backgroundColor: "#60a5fa" }]}
-    onPress={() => {
-      setShowModal(false);
-      navigation.navigate("ReviewScreen", {
-        booking: selectedJob,
-      });
-    }}
-  >
-    <Text style={styles.acceptBtnText}>Give Review</Text>
-  </TouchableOpacity>
-)}
+              {isSeeker && mapStatus(selectedJob?.status) === "Done" && (
+                <TouchableOpacity
+                  style={[styles.acceptBtn, { backgroundColor: "#60a5fa" }]}
+                  onPress={() => {
+                    setShowModal(false);
+                    setShowModal(false);
+                    setShowReviewModal(true);
+                  }}
+                >
+                  <Text style={styles.acceptBtnText}>Give Review</Text>
+                </TouchableOpacity>
+              )}
             </View>
-       
+
+          </View>
+        </View>
+      </Modal>
+      <Modal transparent animationType="fade" visible={showReviewModal}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { padding: 20 }]}>
+
+            <Text style={{ fontSize: 20, fontWeight: "700", color: "#fff", marginBottom: 15 }}>
+              Rate Provider
+            </Text>
+
+            {/* ⭐ Stars */}
+            <View style={{ flexDirection: "row", marginBottom: 20 }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                  <Text style={{ fontSize: 32 }}>
+                    {star <= rating ? "⭐" : "☆"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Comment */}
+            <TextInput
+              placeholder="Write your review..."
+              placeholderTextColor="#aaa"
+              value={comment}
+              onChangeText={setComment}
+              style={{
+                borderWidth: 1,
+                borderColor: "#333",
+                padding: 10,
+                borderRadius: 10,
+                color: "#fff",
+                marginBottom: 20,
+              }}
+            />
+
+            {/* Buttons */}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setShowReviewModal(false)}
+              >
+                <Text style={styles.closeBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.acceptBtn, { backgroundColor: "#4ade80" }]}
+                onPress={async () => {
+                  await addReview({
+                    bookingId: selectedJob.bookingId,
+                    providerId: selectedJob.participants.provider.providerId,
+                    userId: user.userId,
+                    rating,
+                    comment,
+                  });
+
+                  setShowReviewModal(false);
+                  setRating(0);
+                  setComment("");
+
+                  alert("Review submitted ✅");
+                }}
+              >
+                <Text style={styles.acceptBtnText}>Submit</Text>
+              </TouchableOpacity>
+            </View>
+
           </View>
         </View>
       </Modal>
