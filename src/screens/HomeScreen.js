@@ -7,16 +7,14 @@ import {
   FlatList, Image,
   Modal,
   ScrollView,
-  StyleSheet,
-  Text, TextInput, TouchableOpacity,
+  StyleSheet, Switch, Text, TextInput, TouchableOpacity,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { getServices, registerUser } from "../apis/authApi";
+import { getServices, registerUser, updateOnlineStatus } from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
-
 
 
 const categories = [
@@ -103,7 +101,53 @@ const videos = [
 
 export default function HomeScreen() {
 
-  const { user, updateRole } = useAuth();
+
+  const toggleStatus = async (value) => {
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      const data = await updateOnlineStatus(user.userId, value);
+
+      console.log("API RESPONSE:", data);
+
+      // ✅ STRICT check
+      if (data?.success === true && data?.user) {
+
+        const updatedStatus = data.user.isOnline;
+
+        setIsOnline(updatedStatus);
+
+
+        Toast.show({
+          type: "success",
+          text1: updatedStatus
+            ? "You are now Online 🟢"
+            : "You are now Offline 🔴",
+        });
+
+        return; // ✅ VERY IMPORTANT (stops execution)
+
+      }
+
+      // ❌ only if truly failed
+      throw new Error(data?.message || "Update failed");
+
+    } catch (err) {
+      console.log("ERROR:", err);
+
+      Toast.show({
+        type: "error",
+        text1: "Failed to update status",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { user, updateRole, setUser } = useAuth();
+  const isProvider = user?.role === "provider";
 
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("");
@@ -114,7 +158,9 @@ export default function HomeScreen() {
   const [searchText, setSearchText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [allServicesFlat, setAllServicesFlat] = useState([]);
-
+  const [notifications, setNotifications] = useState([]);
+  const [isOnline, setIsOnline] = useState(user?.isOnline || false);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState(route.params?.search || "");
   const [recentServices, setRecentServices] = useState([
     { name: "Plumber", icon: "water-outline" },
@@ -135,6 +181,8 @@ export default function HomeScreen() {
       setVisibleVideoId(viewableItems[0].item.id);
     }
   });
+
+
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -190,6 +238,8 @@ export default function HomeScreen() {
       item.name.toLowerCase().includes(text.toLowerCase())
     );
 
+
+
     setSuggestions(filtered.slice(0, 5)); // limit results
   };
 
@@ -242,9 +292,158 @@ export default function HomeScreen() {
     }
   };
 
+  if (isProvider) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.container}>
+
+
+
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.greeting}>
+                Hi {user?.name} 👋
+              </Text>
+              <Text style={styles.subText}>
+                Ready to earn today?
+              </Text>
+            </View>
+
+            {/* 🔔 Notification Icon */}
+            <TouchableOpacity
+              style={styles.notificationIcon}
+              onPress={() => navigation.navigate("NotificationScreen")}
+            >
+              <View>
+                <Ionicons
+                  name="notifications-outline"
+                  size={22}
+                  color={COLORS.primary}
+                />
+
+                {/* 🔴 Badge */}
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {notifications.filter(n => !n.isRead).length}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 10 }}>
+            <Text>Status: </Text>
+
+            <Text
+              style={{
+                color: isOnline ? "green" : "red",
+                fontWeight: "bold",
+                marginRight: 10,
+              }}
+            >
+              {isOnline ? "Online 🟢" : "Offline 🔴"}
+            </Text>
+
+            <Switch
+              value={isOnline}
+              onValueChange={(value) => toggleStatus(value)}
+            />
+          </View>
+
+
+          {/* 🔥 Incoming Jobs (Preview Only) */}
+          <Text style={styles.sectionTitle}>New Requests</Text>
+
+          <TouchableOpacity
+            style={styles.jobCard}
+            onPress={() => navigation.navigate("BookingScreen")}
+          >
+            <Text style={styles.jobTitle}>Home Cleaning</Text>
+            <Text style={styles.jobStatus}>Delhi • ₹500</Text>
+
+            <Text style={{ color: COLORS.primary, marginTop: 6 }}>
+              View Details →
+            </Text>
+          </TouchableOpacity>
+
+          {/* 🟡 Ongoing Jobs */}
+          <Text style={styles.sectionTitle}>Ongoing Jobs</Text>
+
+          {ongoingJobs.map((job, index) => (
+            <View key={index} style={styles.jobCard}>
+              <Text style={styles.jobTitle}>{job.name}</Text>
+              <Text style={styles.jobStatus}>{job.status}</Text>
+            </View>
+          ))}
+
+          {/* 💰 Earnings */}
+          <View style={{
+            backgroundColor: "#E8F5E9",
+            padding: 15,
+            borderRadius: 12,
+            marginBottom: 15
+          }}>
+            <Text style={{ fontWeight: "bold" }}>Today's Earnings</Text>
+            <Text style={{ fontSize: 18, color: "green" }}>₹1200</Text>
+          </View>
+
+          {/* ⭐ Rating + Reviews */}
+          <View style={{
+            backgroundColor: "#FFF3CD",
+            padding: 15,
+            borderRadius: 12,
+            marginBottom: 15
+          }}>
+            <Text style={{ fontWeight: "bold" }}>⭐ Your Rating</Text>
+            <Text style={{ fontSize: 16, marginTop: 4 }}>4.5 / 5</Text>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ReviewScreen")}
+            >
+              <Text style={{ color: COLORS.primary, marginTop: 6 }}>
+                View Reviews →
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ⚡ Quick Actions */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => navigation.navigate("BookingScreen")}
+            >
+              <Text>📋 My Jobs</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => navigation.navigate("ReviewScreen")}
+            >
+              <Text>⭐ Reviews</Text>
+            </TouchableOpacity>
+
+          </View>
+
+          {/* 🧰 My Skills */}
+          <Text style={styles.sectionTitle}>My Skills</Text>
+
+          <View style={styles.categoryGrid}>
+            {user?.skills?.map((skill, index) => (
+              <View key={index} style={styles.categoryCard}>
+                <Text>{skill}</Text>
+              </View>
+            ))}
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
 
   return (
+
     <SafeAreaView style={styles.safeArea}>
       <Modal visible={showRoleModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>

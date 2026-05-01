@@ -1,6 +1,6 @@
 //export const BASE_URL = "http://192.168.123.208:5000/api";
 //export const BASE_URL = "http://192.168.31.62:5000/api";
-export const BASE_URL = "http://10.64.159.208:5000/api";  
+export const BASE_URL = "http://192.168.31.62:5000/api";  
 
 
 export const AUTH_ENDPOINTS = {
@@ -25,4 +25,5 @@ export const AUTH_ENDPOINTS = {
   COMPLETE_BOOKING: `${BASE_URL}/complete-booking`,
   ADD_REVIEW: `${BASE_URL}/add-review`,
 GET_PROVIDER_REVIEWS: `${BASE_URL}/provider-reviews`,
+UPDATE_ONLINE_STATUS: `${BASE_URL}/update-online-status`,
 };

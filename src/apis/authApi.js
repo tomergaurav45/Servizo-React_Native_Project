@@ -538,3 +538,22 @@ export const getProviderReviews = async (providerId) => {
     };
   }
 };
+
+export const updateOnlineStatus = async (userId, isOnline) => {
+  try {
+    const res = await fetch(AUTH_ENDPOINTS.UPDATE_ONLINE_STATUS, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        isOnline,
+      }),
+    });
+
+    return await res.json();
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
