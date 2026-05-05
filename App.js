@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import BottomTabs from "./src/navigation/BottomTabs";
 import AddAddressMap from "./src/screens/AddAddressMap";
 import AllServicesScreen from "./src/screens/AllServicesScreen";
+import BookingScreen from "./src/screens/BookingsScreen";
 import ChangePassword from "./src/screens/ChangePassword";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
 import FinalScreen from "./src/screens/FinalScreen";
@@ -34,6 +35,10 @@ function AppNavigator() {
         <>
           <Stack.Screen name="MainTabs" component={BottomTabs} />
           <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+          <Stack.Screen
+  name="BookingScreen"
+  component={BookingScreen}
+/>
           <Stack.Screen
             name="ManageAddressScreen"
             component={ManageAddressScreen}

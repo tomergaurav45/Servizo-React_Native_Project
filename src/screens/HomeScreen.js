@@ -1,21 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Video } from "expo-av";
 import * as Location from "expo-location";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FlatList, Image,
   Modal,
   ScrollView,
-  StyleSheet, Switch, Text, TextInput, TouchableOpacity,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { getServices, registerUser, updateOnlineStatus } from "../apis/authApi";
+import { getNotifications, getProviderRequests, getProviderReviews, getServices, registerUser, updateOnlineStatus } from "../apis/authApi";
+import { ServizoAlert } from "../components/ServizoAlert";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
-
 
 const categories = [
   { id: 1, name: "Home Cleaning", icon: "home-outline" },
@@ -112,7 +113,6 @@ export default function HomeScreen() {
 
       console.log("API RESPONSE:", data);
 
-      // ✅ STRICT check
       if (data?.success === true && data?.user) {
 
         const updatedStatus = data.user.isOnline;
@@ -127,11 +127,11 @@ export default function HomeScreen() {
             : "You are now Offline 🔴",
         });
 
-        return; // ✅ VERY IMPORTANT (stops execution)
+        return;
 
       }
 
-      // ❌ only if truly failed
+
       throw new Error(data?.message || "Update failed");
 
     } catch (err) {
@@ -159,13 +159,22 @@ export default function HomeScreen() {
   const [suggestions, setSuggestions] = useState([]);
   const [allServicesFlat, setAllServicesFlat] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const unreadCount = notifications.filter(n => !n.isRead).length;
   const [isOnline, setIsOnline] = useState(user?.isOnline || false);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState(route.params?.search || "");
+  const [newRequests, setNewRequests] = useState([]);
+  const [todayEarnings, setTodayEarnings] = useState(0);
+  const [showAlert, setShowAlert] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
   const [recentServices, setRecentServices] = useState([
+
+
     { name: "Plumber", icon: "water-outline" },
     { name: "AC Repair", icon: "snow-outline" }
   ]);
+  const [rating, setRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
 
 
   const [ongoingJobs, setOngoingJobs] = useState([
@@ -181,6 +190,100 @@ export default function HomeScreen() {
       setVisibleVideoId(viewableItems[0].item.id);
     }
   });
+
+  const fetchRequests = async () => {
+    try {
+      const res = await getProviderRequests(user.userId);
+
+      if (res.success) {
+
+        const newReq = res.data.filter(
+          item => item.status === "OPEN"
+        );
+
+        const ongoing = res.data.filter(
+          item =>
+            item.status === "ACCEPTED" ||
+            item.status === "IN_PROGRESS"
+        );
+
+        // 🔥 TODAY EARNINGS
+        const today = new Date().toDateString();
+
+        const completedToday = res.data.filter(item => {
+          return (
+            item.status === "COMPLETED" &&
+            new Date(item.updatedAt).toDateString() === today
+          );
+        });
+
+        const total = completedToday.reduce(
+          (sum, item) => sum + (item.price || 0),
+          0
+        );
+
+        setNewRequests(newReq);
+        setOngoingJobs(ongoing);
+        setTodayEarnings(total); // ✅ REAL EARNING
+
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+
+  const fetchNotifications = async () => {
+    try {
+      if (!user?.userId) return;
+
+      const res = await getNotifications(user.userId);
+
+      if (res.success) {
+        setNotifications(res.data);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotifications();
+    }, [user])
+  );
+
+  const fetchRating = async () => {
+    try {
+      if (!user?.userId) return;
+
+      const res = await getProviderReviews(user.userId);
+
+      console.log("REVIEW API:", res);
+
+      if (res.success && res.data) {
+        setRating(res.data.avgRating || 0);
+        setTotalReviews(res.data.totalReviews || 0);
+      } else {
+        setRating(0);
+        setTotalReviews(0);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    if (isProvider && user?.userId) {
+      fetchRating();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isProvider) {
+      fetchRequests();
+    }
+  }, []);
 
 
   useEffect(() => {
@@ -226,6 +329,19 @@ export default function HomeScreen() {
     }
   };
 
+  const confirmOffline = () => {
+    setShowAlert(false);
+    toggleStatus(false);
+  };
+
+  const cancelOffline = () => {
+    setShowAlert(false);
+    setPendingStatus(null);
+
+
+    setIsOnline(true);
+  };
+
   const handleSearch = (text) => {
     setSearchText(text);
 
@@ -240,8 +356,9 @@ export default function HomeScreen() {
 
 
 
-    setSuggestions(filtered.slice(0, 5)); // limit results
+    setSuggestions(filtered.slice(0, 5));
   };
+
 
   const selectRole = async (role) => {
     try {
@@ -322,59 +439,127 @@ export default function HomeScreen() {
                 />
 
                 {/* 🔴 Badge */}
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {notifications.filter(n => !n.isRead).length}
-                  </Text>
-                </View>
+                {unreadCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {unreadCount}
+                    </Text>
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 10 }}>
-            <Text>Status: </Text>
+          <View
+            style={{
+              backgroundColor: isOnline ? "#E8F5E9" : "#FFEBEE",
+              padding: 15,
+              borderRadius: 12,
+              marginBottom: 15,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <View>
+              <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                {isOnline ? "You are Online 🟢" : "You are Offline 🔴"}
+              </Text>
 
-            <Text
+              <Text style={{ color: "#666", marginTop: 4 }}>
+                {isOnline
+                  ? "You will receive new job requests"
+                  : "You will not receive new jobs"}
+              </Text>
+            </View>
+
+            <TouchableOpacity
               style={{
-                color: isOnline ? "green" : "red",
-                fontWeight: "bold",
-                marginRight: 10,
+                backgroundColor: isOnline ? "#E53935" : "#2E7D32",
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 8,
+              }}
+              onPress={() => {
+                if (isOnline) {
+                  setPendingStatus(false);
+                  setShowAlert(true);
+                } else {
+                  toggleStatus(true);
+                }
               }}
             >
-              {isOnline ? "Online 🟢" : "Offline 🔴"}
-            </Text>
-
-            <Switch
-              value={isOnline}
-              onValueChange={(value) => toggleStatus(value)}
-            />
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                {isOnline ? "Go Offline" : "Go Online"}
+              </Text>
+            </TouchableOpacity>
           </View>
 
 
-          {/* 🔥 Incoming Jobs (Preview Only) */}
           <Text style={styles.sectionTitle}>New Requests</Text>
 
-          <TouchableOpacity
-            style={styles.jobCard}
-            onPress={() => navigation.navigate("BookingScreen")}
-          >
-            <Text style={styles.jobTitle}>Home Cleaning</Text>
-            <Text style={styles.jobStatus}>Delhi • ₹500</Text>
+          {newRequests.length === 0 ? (
+            <Text style={{ color: "#888" }}>No new requests</Text>
+          ) : (
+            <>
+              {/* 🔥 ONLY ONE REQUEST */}
+              <TouchableOpacity
+                style={styles.jobCard}
+                onPress={() =>
+                  navigation.navigate("BookingDetails", {
+                    booking: newRequests[0],
+                  })
+                }
+              >
+                <Text style={styles.jobTitle}>
+                  {newRequests[0].serviceName}
+                </Text>
 
-            <Text style={{ color: COLORS.primary, marginTop: 6 }}>
-              View Details →
-            </Text>
-          </TouchableOpacity>
+                <Text style={styles.jobStatus}>
+                  {newRequests[0].address?.city} • ₹{newRequests[0].price || 500}
+                </Text>
+              </TouchableOpacity>
 
-          {/* 🟡 Ongoing Jobs */}
+              {/* 🔥 VIEW ALL BUTTON */}
+              <TouchableOpacity
+                onPress={() => navigation.navigate("BookingScreen")}
+              >
+                <Text
+                  style={{
+                    color: COLORS.primary,
+                    marginTop: 8,
+                    fontWeight: "600",
+                  }}
+                >
+                  View All Requests →
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+
           <Text style={styles.sectionTitle}>Ongoing Jobs</Text>
 
-          {ongoingJobs.map((job, index) => (
-            <View key={index} style={styles.jobCard}>
-              <Text style={styles.jobTitle}>{job.name}</Text>
-              <Text style={styles.jobStatus}>{job.status}</Text>
-            </View>
-          ))}
+          {ongoingJobs.length === 0 ? (
+            <Text style={{ color: "#888" }}>No ongoing jobs</Text>
+          ) : (
+            ongoingJobs.map((job, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.jobCard}
+                onPress={() =>
+                  navigation.navigate("BookingDetails", { booking: job })
+                }
+              >
+                <Text style={styles.jobTitle}>
+                  {job.serviceName}
+                </Text>
+
+                <Text style={styles.jobStatus}>
+                  {job.status} • {job.address?.city}
+                </Text>
+              </TouchableOpacity>
+            ))
+          )}
 
           {/* 💰 Earnings */}
           <View style={{
@@ -384,7 +569,9 @@ export default function HomeScreen() {
             marginBottom: 15
           }}>
             <Text style={{ fontWeight: "bold" }}>Today's Earnings</Text>
-            <Text style={{ fontSize: 18, color: "green" }}>₹1200</Text>
+            <Text style={{ fontSize: 18, color: "green" }}>
+              ₹{todayEarnings}
+            </Text>
           </View>
 
           {/* ⭐ Rating + Reviews */}
@@ -395,7 +582,9 @@ export default function HomeScreen() {
             marginBottom: 15
           }}>
             <Text style={{ fontWeight: "bold" }}>⭐ Your Rating</Text>
-            <Text style={{ fontSize: 16, marginTop: 4 }}>4.5 / 5</Text>
+            <Text style={{ fontSize: 16, marginTop: 4 }}>
+              ⭐ {rating} / 5 ({totalReviews} reviews)
+            </Text>
 
             <TouchableOpacity
               onPress={() => navigation.navigate("ReviewScreen")}
@@ -409,19 +598,7 @@ export default function HomeScreen() {
           {/* ⚡ Quick Actions */}
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
 
-            <TouchableOpacity
-              style={styles.categoryCard}
-              onPress={() => navigation.navigate("BookingScreen")}
-            >
-              <Text>📋 My Jobs</Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.categoryCard}
-              onPress={() => navigation.navigate("ReviewScreen")}
-            >
-              <Text>⭐ Reviews</Text>
-            </TouchableOpacity>
 
           </View>
 
@@ -697,6 +874,13 @@ export default function HomeScreen() {
         </ScrollView>
 
       </ScrollView>
+      <ServizoAlert
+        visible={showAlert}
+        title="Go Offline?"
+        message="You will stop receiving new job requests. Do you want to continue?"
+        onConfirm={confirmOffline}
+        onCancel={cancelOffline}
+      />
     </SafeAreaView>
   );
 }

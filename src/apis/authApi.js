@@ -557,3 +557,22 @@ export const updateOnlineStatus = async (userId, isOnline) => {
     return { success: false, message: err.message };
   }
 };
+
+export const getNotifications = async (userId) => {
+  try {
+    const res = await fetch(
+      `${AUTH_ENDPOINTS.GET_NOTIFICATIONS}/${userId}`
+    );
+    return await res.json();
+  } catch (err) {
+    return { success: false };
+  }
+};
+
+export const markNotificationRead = async (id) => {
+  await fetch(`${AUTH_ENDPOINTS.MARK_NOTIFICATION_READ}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+};

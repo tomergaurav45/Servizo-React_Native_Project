@@ -11,7 +11,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getAddresses } from "../apis/authApi";
+import { getAddresses, getProviderRequests, getProviderReviews } from "../apis/authApi";
 import { ServizoAlert } from "../components/ServizoAlert";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -65,6 +65,11 @@ export default function ProfileScreen({ navigation }) {
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const isProvider = user?.role === "provider";
   const [addresses, setAddresses] = useState([]);
+  const [stats, setStats] = useState({
+  jobsDone: 0,
+  rating: 0,
+  pending: 0,
+});
   const isAddressMissing = () => {
     return !addresses || addresses.length === 0;
   };
@@ -81,6 +86,52 @@ export default function ProfileScreen({ navigation }) {
       fetchAddresses();
     }, [user])
   );
+
+  const fetchStats = async () => {
+  try {
+    if (!user?.userId) return;
+
+   
+    const bookingRes = await getProviderRequests(user.userId);
+
+    let jobsDone = 0;
+    let pending = 0;
+
+    if (bookingRes.success) {
+      jobsDone = bookingRes.data.filter(
+        item => item.status === "COMPLETED"
+      ).length;
+
+      pending = bookingRes.data.filter(
+        item =>
+          item.status === "OPEN" ||
+          item.status === "ACCEPTED"
+      ).length;
+    }
+  const reviewRes = await getProviderReviews(user.userId);
+
+    let rating = 0;
+
+    if (reviewRes.success && reviewRes.data) {
+      rating = reviewRes.data.avgRating || 0;
+    }
+
+    setStats({
+      jobsDone,
+      rating,
+      pending,
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+useFocusEffect(
+  useCallback(() => {
+    fetchStats();
+  }, [user])
+);
 
   const initials = user?.name
     ? user.name
@@ -192,10 +243,10 @@ export default function ProfileScreen({ navigation }) {
         {isProvider && (
           <View style={styles.statsRow}>
             {[
-              { label: "Jobs Done", value: "24", screen: "ActivityScreen" },
-              { label: "Rating", value: "4.8", screen: "ReviewScreen" },
-              { label: "Pending", value: "3", screen: "ActivityScreen" },
-            ].map((stat, i) => (
+  { label: "Jobs Done", value: stats.jobsDone },
+  { label: "Rating", value: stats.rating },
+  { label: "Pending", value: stats.pending },
+].map((stat, i) => (
               <TouchableOpacity
                 key={i}
                 style={styles.statBox}

@@ -1,55 +1,92 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getNotifications, markNotificationRead } from "../apis/authApi";
+import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
 const NotificationScreen = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState([]);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      title: "Booking Confirmed ✅",
-      message: "Your home cleaning is scheduled for tomorrow",
-      time: "2 min ago",
-      read: false,
-    },
-    {
-      id: "2",
-      title: "Payment Successful 💰",
-      message: "₹499 paid for AC servicing",
-      time: "1 hour ago",
-      read: true,
-    },
-  ]);
+  const fetchNotifications = async () => {
+    try {
+      if (!user?.userId) return;
 
-  // 🔥 Mark as read on click
-  const handlePress = (id) => {
-    const updated = notifications.map((item) =>
-      item.id === id ? { ...item, read: true } : item
-    );
-    setNotifications(updated);
+      const res = await getNotifications(user.userId);
+
+      if (res.success) {
+        setNotifications(res.data);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotifications();
+    }, [user])
+  );
+
+  const handlePress = async (id, item) => {
+    try {
+      await markNotificationRead(id);
+
+      const updated = notifications.map((n) =>
+        n._id === id ? { ...n, isRead: true } : n
+      );
+
+      setNotifications(updated);
+
+
+      if (item.type === "booking") {
+        navigation.navigate("BookingScreen");
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.card}
-      onPress={() => handlePress(item.id)}
+      style={[
+        styles.card,
+        { backgroundColor: item?.isRead ? "#f9f9f9" : "#eef4ff" }
+      ]}
+      onPress={() => handlePress(item?._id, item)}
     >
-      {!item.read && <View style={styles.unreadDot} />}
+      {!item?.isRead && <View style={styles.unreadDot} />}
 
       <View style={{ flex: 1 }}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.message}>{item.message}</Text>
-        <Text style={styles.time}>{item.time}</Text>
+
+
+        <Text style={styles.title}>
+          {typeof item?.title === "string" ? item.title : ""}
+        </Text>
+
+
+        <Text style={styles.message}>
+          {typeof item?.message === "string" ? item.message : ""}
+        </Text>
+
+
+        <Text style={styles.time}>
+          {item?.createdAt
+            ? new Date(item.createdAt).toLocaleString()
+            : ""}
+        </Text>
+
       </View>
     </TouchableOpacity>
   );
@@ -64,13 +101,13 @@ const NotificationScreen = () => {
 
         <Text style={styles.headerTitle}>Notifications</Text>
 
-        {/* 🔥 Clear All Button */}
+
         <TouchableOpacity onPress={() => setNotifications([])}>
           <Ionicons name="trash-outline" size={20} color="#999" />
         </TouchableOpacity>
       </View>
 
-      {/* List OR Empty */}
+
       {notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="notifications-off-outline" size={60} color="#ccc" />
@@ -79,7 +116,7 @@ const NotificationScreen = () => {
       ) : (
         <FlatList
           data={notifications}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 16 }}
         />
