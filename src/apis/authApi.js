@@ -541,6 +541,8 @@ export const getProviderReviews = async (providerId) => {
 
 export const updateOnlineStatus = async (userId, isOnline) => {
   try {
+    console.log("Sending status:", { userId, isOnline }); // 🔍 debug
+
     const res = await fetch(AUTH_ENDPOINTS.UPDATE_ONLINE_STATUS, {
       method: "POST",
       headers: {
@@ -552,8 +554,13 @@ export const updateOnlineStatus = async (userId, isOnline) => {
       }),
     });
 
-    return await res.json();
+    const data = await res.json();
+
+    console.log("Response:", data); // 🔍 debug
+
+    return data;
   } catch (err) {
+    console.log("API Error:", err);
     return { success: false, message: err.message };
   }
 };

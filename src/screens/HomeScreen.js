@@ -104,38 +104,25 @@ export default function HomeScreen() {
 
 
   const toggleStatus = async (value) => {
-    if (loading) return;
+    if (loading || !user?.userId) return;
 
+    const previousStatus = isOnline;
+
+    setIsOnline(value);
     setLoading(true);
 
     try {
       const data = await updateOnlineStatus(user.userId, value);
 
-      console.log("API RESPONSE:", data);
-
-      if (data?.success === true && data?.user) {
-
-        const updatedStatus = data.user.isOnline;
-
-        setIsOnline(updatedStatus);
-
-
-        Toast.show({
-          type: "success",
-          text1: updatedStatus
-            ? "You are now Online 🟢"
-            : "You are now Offline 🔴",
-        });
-
-        return;
-
+      if (data?.success) {
+        setIsOnline(typeof data.isOnline === "boolean" ? data.isOnline : value);
+      } else {
+        throw new Error(data?.message || "Failed to update status");
       }
-
-
-      throw new Error(data?.message || "Update failed");
-
     } catch (err) {
-      console.log("ERROR:", err);
+      console.log("Online status update failed:", err);
+
+      setIsOnline(previousStatus);
 
       Toast.show({
         type: "error",
@@ -224,7 +211,7 @@ export default function HomeScreen() {
 
         setNewRequests(newReq);
         setOngoingJobs(ongoing);
-        setTodayEarnings(total); // ✅ REAL EARNING
+        setTodayEarnings(total);
 
       }
     } catch (err) {
@@ -252,6 +239,16 @@ export default function HomeScreen() {
       fetchNotifications();
     }, [user])
   );
+
+  useEffect(() => {
+    if (user?.isOnline !== undefined) {
+      setIsOnline(user.isOnline);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    console.log("🟢 isOnline changed:", isOnline);
+  }, [isOnline]);
 
   const fetchRating = async () => {
     try {
@@ -337,9 +334,6 @@ export default function HomeScreen() {
   const cancelOffline = () => {
     setShowAlert(false);
     setPendingStatus(null);
-
-
-    setIsOnline(true);
   };
 
   const handleSearch = (text) => {
@@ -413,6 +407,26 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.container}>
+          <TouchableOpacity
+            style={styles.locationBar}
+            onPress={() => navigation.navigate("ManageAddressScreen")}
+          >
+            <Ionicons name="location-outline" size={20} color={COLORS.primary} />
+
+            <View style={{ marginLeft: 8 }}>
+              <Text style={styles.locationLabel}>Your Location</Text>
+              <Text style={styles.locationText}>
+                {address || "Detecting location..."}
+              </Text>
+            </View>
+
+            <Ionicons
+              name="chevron-forward-outline"
+              size={18}
+              color="#999"
+              style={{ marginLeft: "auto" }}
+            />
+          </TouchableOpacity>
 
 
 
@@ -479,15 +493,10 @@ export default function HomeScreen() {
                 paddingVertical: 8,
                 paddingHorizontal: 14,
                 borderRadius: 8,
+                opacity: loading ? 0.7 : 1,
               }}
-              onPress={() => {
-                if (isOnline) {
-                  setPendingStatus(false);
-                  setShowAlert(true);
-                } else {
-                  toggleStatus(true);
-                }
-              }}
+              disabled={loading}
+              onPress={() => toggleStatus(!isOnline)}
             >
               <Text style={{ color: "#fff", fontWeight: "bold" }}>
                 {isOnline ? "Go Offline" : "Go Online"}
@@ -568,13 +577,13 @@ export default function HomeScreen() {
             borderRadius: 12,
             marginBottom: 15
           }}>
-            <Text style={{ fontWeight: "bold" }}>Today's Earnings</Text>
+            <Text style={{ fontWeight: "bold" }}>Today&apos;s Earnings</Text>
             <Text style={{ fontSize: 18, color: "green" }}>
               ₹{todayEarnings}
             </Text>
           </View>
 
-          {/* ⭐ Rating + Reviews */}
+
           <View style={{
             backgroundColor: "#FFF3CD",
             padding: 15,
