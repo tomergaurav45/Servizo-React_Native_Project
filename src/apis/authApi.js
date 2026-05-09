@@ -583,3 +583,57 @@ export const markNotificationRead = async (id) => {
     body: JSON.stringify({ id }),
   });
 };
+
+export const sendMessage = async ({ senderId, receiverId, message, bookingId }) => {
+  try {
+    const response = await fetch(AUTH_ENDPOINTS.SEND_MESSAGE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ senderId, receiverId, message, bookingId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to send message",
+      };
+    }
+
+    return data;
+  } catch (_err) {
+    return {
+      success: false,
+      message: "Network error while sending message",
+    };
+  }
+};
+
+export const getMessages = async ({ user1, user2, bookingId }) => {
+  try {
+    const params = [
+      `user1=${encodeURIComponent(user1)}`,
+      `user2=${encodeURIComponent(user2)}`,
+    ];
+
+    if (bookingId) params.push(`bookingId=${encodeURIComponent(bookingId)}`);
+
+    const response = await fetch(`${AUTH_ENDPOINTS.GET_MESSAGES}?${params.join("&")}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to fetch messages",
+      };
+    }
+
+    return data;
+  } catch (_err) {
+    return {
+      success: false,
+      message: "Network error while fetching messages",
+    };
+  }
+};
