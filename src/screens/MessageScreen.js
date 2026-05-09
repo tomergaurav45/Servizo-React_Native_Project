@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,7 +12,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import io from "socket.io-client";
 import { getMessages, sendMessage } from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -29,6 +31,7 @@ export default function MessageScreen({ route }) {
   const currentUserId = currentUser?.userId;
   const receiverId = useMemo(() => getUserId(selectedUser), [selectedUser]);
   const listRef = useRef(null);
+  const socketRef = useRef(null);
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -63,6 +66,43 @@ export default function MessageScreen({ route }) {
       fetchMessages();
     }, [fetchMessages])
   );
+
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    socketRef.current = io("http://192.168.31.62:5000");
+
+    socketRef.current.emit("join", currentUserId);
+
+   socketRef.current.on("newMessage", (newMessage) => {
+
+  if (newMessage.senderId === currentUserId) {
+    return;
+  }
+
+  const isCurrentChat =
+    newMessage.bookingId === bookingId &&
+    (
+      (newMessage.senderId === currentUserId &&
+        newMessage.receiverId === receiverId) ||
+      (newMessage.senderId === receiverId &&
+        newMessage.receiverId === currentUserId)
+    );
+
+  if (!isCurrentChat) return;
+
+  setMessages((prev) => [...prev, newMessage]);
+
+  setTimeout(() => {
+    listRef.current?.scrollToEnd({ animated: true });
+  }, 100);
+});
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, [bookingId, currentUserId, receiverId]);
 
   const handleSend = async () => {
     const text = message.trim();
@@ -125,58 +165,60 @@ export default function MessageScreen({ route }) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View style={styles.header}>
-        <Ionicons name="person-circle-outline" size={36} color={COLORS.primary} />
-        <View style={styles.headerText}>
-          <Text style={styles.headerName}>{selectedUser?.name || "User"}</Text>
-          {!!bookingId && <Text style={styles.headerSub}>Booking chat</Text>}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={styles.header}>
+          <Ionicons name="person-circle-outline" size={36} color={COLORS.primary} />
+          <View style={styles.headerText}>
+            <Text style={styles.headerName}>{selectedUser?.name || "User"}</Text>
+            {!!bookingId && <Text style={styles.headerSub}>Booking chat</Text>}
+          </View>
         </View>
-      </View>
 
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={COLORS.primary} />
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={COLORS.primary} />
+          </View>
+        ) : (
+          <FlatList
+            ref={listRef}
+            data={messages}
+            keyExtractor={getMessageId}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No messages yet</Text>
+            }
+          />
+        )}
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Type a message..."
+            value={message}
+            onChangeText={setMessage}
+            style={styles.input}
+            multiline
+          />
+
+          <TouchableOpacity
+            style={[styles.sendBtn, sending && styles.sendBtnDisabled]}
+            onPress={handleSend}
+            disabled={sending}
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="send" size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
         </View>
-      ) : (
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={getMessageId}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>No messages yet</Text>
-          }
-        />
-      )}
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Type a message..."
-          value={message}
-          onChangeText={setMessage}
-          style={styles.input}
-          multiline
-        />
-
-        <TouchableOpacity
-          style={[styles.sendBtn, sending && styles.sendBtnDisabled]}
-          onPress={handleSend}
-          disabled={sending}
-        >
-          {sending ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="send" size={20} color="#fff" />
-          )}
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

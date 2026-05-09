@@ -307,6 +307,23 @@ export default function BookingScreen() {
 
 
             <View style={styles.modalActions}>
+              {selectedJob?.status === "ASSIGNED" && (
+                <TouchableOpacity
+                  style={[styles.acceptBtn, { backgroundColor: "#60a5fa" }]}
+                  onPress={() => {
+                    setShowModal(false);
+
+                    navigation.navigate("MessageScreen", {
+                      user: isSeeker
+                        ? selectedJob?.participants?.provider
+                        : selectedJob?.participants?.user,
+                      bookingId: selectedJob?.bookingId,
+                    });
+                  }}
+                >
+                  <Text style={styles.acceptBtnText}>Chat</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.closeBtn}
                 onPress={() => setShowModal(false)}

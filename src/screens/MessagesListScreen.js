@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { getMessages, getProviderRequests, getUserBookings } from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -157,7 +158,7 @@ export default function MessagesListScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={conversations}
         keyExtractor={(item) => item.id}
@@ -166,7 +167,7 @@ export default function MessagesListScreen({ navigation }) {
           <Text style={styles.emptyText}>No chats available yet</Text>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
