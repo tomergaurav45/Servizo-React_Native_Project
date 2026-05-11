@@ -3,6 +3,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -15,7 +16,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import io from "socket.io-client";
-import { getMessages, sendMessage } from "../apis/authApi";
+import {
+  deleteSingleMessage,
+  getMessages,
+  sendMessage,
+} from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
@@ -76,6 +81,12 @@ export default function MessageScreen({ route }) {
     socketRef.current.emit("join", currentUserId);
 
    socketRef.current.on("newMessage", (newMessage) => {
+
+    socketRef.current.on("messageDeleted", (messageId) => {
+  setMessages((prev) =>
+    prev.filter((msg) => msg._id !== messageId)
+  );
+});
 
   if (newMessage.senderId === currentUserId) {
     return;
@@ -147,22 +158,63 @@ export default function MessageScreen({ route }) {
     setSending(false);
   };
 
-  const renderItem = ({ item }) => {
-    const isMine = item.senderId === currentUserId || item.sender === "me";
+ const renderItem = ({ item }) => {
+  const isMine =
+    item.senderId === currentUserId || item.sender === "me";
 
-    return (
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onLongPress={() => {
+        Alert.alert(
+          "Delete Message",
+          "Delete this message for everyone?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  const res = await deleteSingleMessage(item._id);
+
+                  if (res.success) {
+                    setMessages((prev) =>
+                      prev.filter(
+                        (msg) => msg._id !== item._id
+                      )
+                    );
+                  }
+                } catch (err) {
+                  console.log(err);
+                }
+              },
+            },
+          ]
+        );
+      }}
+    >
       <View
         style={[
           styles.messageContainer,
           isMine ? styles.myMessage : styles.otherMessage,
         ]}
       >
-        <Text style={[styles.messageText, isMine && styles.myMessageText]}>
+        <Text
+          style={[
+            styles.messageText,
+            isMine && styles.myMessageText,
+          ]}
+        >
           {item.message || item.text}
         </Text>
       </View>
-    );
-  };
+    </TouchableOpacity>
+  );
+};
 
   return (
     <SafeAreaView style={styles.container}>

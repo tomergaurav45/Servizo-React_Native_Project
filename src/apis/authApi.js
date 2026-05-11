@@ -637,3 +637,43 @@ export const getMessages = async ({ user1, user2, bookingId }) => {
     };
   }
 };
+
+export const deleteMessagesForUser = async (data) => {
+  try {
+    const response = await fetch(
+      AUTH_ENDPOINTS.DELETE_MESSAGES_FOR_USER,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    return await response.json();
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
+export const deleteSingleMessage = async (id) => {
+  try {
+    const response = await fetch(
+      `${AUTH_ENDPOINTS.DELETE_SINGLE_MESSAGE}/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    return await response.json();
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};

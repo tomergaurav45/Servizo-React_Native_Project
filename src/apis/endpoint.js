@@ -30,4 +30,6 @@ export const AUTH_ENDPOINTS = {
   MARK_NOTIFICATION_READ: `${BASE_URL}/mark-read`,
   SEND_MESSAGE: `${BASE_URL}/send-message`,
   GET_MESSAGES: `${BASE_URL}/messages`,
+  DELETE_MESSAGES_FOR_USER: `${BASE_URL}/delete-messages-for-user`,
+  DELETE_SINGLE_MESSAGE: `${BASE_URL}/delete-single-message`,
 };
