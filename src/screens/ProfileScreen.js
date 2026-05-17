@@ -66,10 +66,10 @@ export default function ProfileScreen({ navigation }) {
   const isProvider = user?.role === "provider";
   const [addresses, setAddresses] = useState([]);
   const [stats, setStats] = useState({
-  jobsDone: 0,
-  rating: 0,
-  pending: 0,
-});
+    jobsDone: 0,
+    rating: 0,
+    pending: 0,
+  });
   const isAddressMissing = () => {
     return !addresses || addresses.length === 0;
   };
@@ -88,50 +88,50 @@ export default function ProfileScreen({ navigation }) {
   );
 
   const fetchStats = async () => {
-  try {
-    if (!user?.userId) return;
+    try {
+      if (!user?.userId) return;
 
-   
-    const bookingRes = await getProviderRequests(user.userId);
 
-    let jobsDone = 0;
-    let pending = 0;
+      const bookingRes = await getProviderRequests(user.userId);
 
-    if (bookingRes.success) {
-      jobsDone = bookingRes.data.filter(
-        item => item.status === "COMPLETED"
-      ).length;
+      let jobsDone = 0;
+      let pending = 0;
 
-      pending = bookingRes.data.filter(
-        item =>
-          item.status === "OPEN" ||
-          item.status === "ACCEPTED"
-      ).length;
+      if (bookingRes.success) {
+        jobsDone = bookingRes.data.filter(
+          item => item.status === "COMPLETED"
+        ).length;
+
+        pending = bookingRes.data.filter(
+          item =>
+            item.status === "OPEN" ||
+            item.status === "ACCEPTED"
+        ).length;
+      }
+      const reviewRes = await getProviderReviews(user.userId);
+
+      let rating = 0;
+
+      if (reviewRes.success && reviewRes.data) {
+        rating = reviewRes.data.avgRating || 0;
+      }
+
+      setStats({
+        jobsDone,
+        rating,
+        pending,
+      });
+
+    } catch (err) {
+      console.log(err);
     }
-  const reviewRes = await getProviderReviews(user.userId);
+  };
 
-    let rating = 0;
-
-    if (reviewRes.success && reviewRes.data) {
-      rating = reviewRes.data.avgRating || 0;
-    }
-
-    setStats({
-      jobsDone,
-      rating,
-      pending,
-    });
-
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-useFocusEffect(
-  useCallback(() => {
-    fetchStats();
-  }, [user])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchStats();
+    }, [user])
+  );
 
   const initials = user?.name
     ? user.name
@@ -243,15 +243,33 @@ useFocusEffect(
         {isProvider && (
           <View style={styles.statsRow}>
             {[
-  { label: "Jobs Done", value: stats.jobsDone },
-  { label: "Rating", value: stats.rating },
-  { label: "Pending", value: stats.pending },
-].map((stat, i) => (
+              {
+                label: "Jobs Done",
+                value: stats.jobsDone,
+                screen: "BookingScreen",
+                status: "COMPLETED",
+              },
+              {
+                label: "Rating",
+                value: stats.rating,
+                screen: "ReviewScreen",
+              },
+              {
+                label: "Pending",
+                value: stats.pending,
+                screen: "BookingScreen",
+                status: "OPEN",
+              },
+            ].map((stat, i) => (
               <TouchableOpacity
                 key={i}
                 style={styles.statBox}
                 activeOpacity={0.7}
-                onPress={() => navigation.navigate(stat.screen)}
+                onPress={() =>
+                  navigation.navigate(stat.screen, {
+                    statusFilter: stat.status,
+                  })
+                }
               >
                 <Text style={styles.statValue}>{stat.value}</Text>
                 <Text style={styles.statLabel}>{stat.label}</Text>

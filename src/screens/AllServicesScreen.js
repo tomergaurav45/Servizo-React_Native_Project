@@ -11,33 +11,42 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getServices } from "../apis/authApi";
+import ServizoLoader from "../components/ServizoLoader";
 import { COLORS } from "../utils/constants";
 
 const AllServicesScreen = () => {
     const navigation = useNavigation();
     const [search, setSearch] = useState("");
     const [servicesData, setServicesData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const filteredServices = servicesData
         .map((section) => ({
             ...section,
-            data: section.data.filter((item) =>
-                item.name.toLowerCase().includes(search.toLowerCase())
+            data: (section?.data || []).filter((item) =>
+                (item?.name || "")
+                    .toLowerCase()
+                    .includes((search || "").toLowerCase())
             ),
         }))
         .filter((section) => section.data.length > 0);
-
     useEffect(() => {
         fetchServices();
     }, []);
 
     const fetchServices = async () => {
-        const res = await getServices();
+        setLoading(true);
 
-        if (res.success) {
-            setServicesData(res.data);
-        } else {
-            console.log(res.message);
+        try {
+            const res = await getServices();
+
+            if (res.success) {
+                setServicesData(res.data);
+            } else {
+                console.log(res.message);
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -57,40 +66,47 @@ const AllServicesScreen = () => {
                 />
             </View>
 
-            {/* Sections */}
-            <FlatList
-                data={filteredServices}
-                keyExtractor={(item) => item.title}
-                renderItem={({ item }) => (
-                    <View style={{ marginBottom: 20 }}>
-                        <Text style={styles.sectionTitle}>{item.title}</Text>
+            {loading ? (
+                <View style={styles.loaderWrap}>
+                    <ServizoLoader text="Fetching services" />
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredServices}
+                    keyExtractor={(item) => item.title}
+                    renderItem={({ item }) => (
+                        <View style={{ marginBottom: 20 }}>
+                            <Text style={styles.sectionTitle}>{item.title}</Text>
 
-                        <View style={styles.grid}>
-                            {item.data.map((service) => (
-                                <TouchableOpacity
-                                    key={service.name}
-                                    style={styles.card}
-                                    onPress={() =>
-                                        navigation.navigate("ServiceList", {
-                                            service: service.name,
-                                        })
-                                    }
-                                >
-                                    <View style={styles.iconBox}>
-                                        <Ionicons
-                                            name={service.icon}
-                                            size={22}
-                                            color={COLORS.primary}
-                                        />
-                                    </View>
+                            <View style={styles.grid}>
+                                {item.data.map((service) => (
+                                    <TouchableOpacity
+                                        key={service.name}
+                                        style={styles.card}
+                                        onPress={() =>
+                                            navigation.navigate("VariantSelectionScreen", {
+                                                serviceCategory: item.title,
+                                                serviceName: service.name,
+                                                serviceItem: service,
+                                            })
+                                        }
+                                    >
+                                        <View style={styles.iconBox}>
+                                            <Ionicons
+                                                name={service.icon}
+                                                size={22}
+                                                color={COLORS.primary}
+                                            />
+                                        </View>
 
-                                    <Text style={styles.cardText}>{service.name}</Text>
-                                </TouchableOpacity>
-                            ))}
+                                        <Text style={styles.cardText}>{service.name}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
                         </View>
-                    </View>
-                )}
-            />
+                    )}
+                />
+            )}
         </SafeAreaView>
     );
 };
@@ -122,6 +138,12 @@ const styles = StyleSheet.create({
     input: {
         marginLeft: 10,
         flex: 1,
+    },
+
+    loaderWrap: {
+        flex: 1,
+        overflow: "hidden",
+        borderRadius: 12,
     },
 
     sectionTitle: {

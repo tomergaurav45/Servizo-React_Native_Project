@@ -19,14 +19,23 @@ import { COLORS } from "../utils/constants";
 export default function FinalScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const [selectedAddress, setSelectedAddress] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
 
-    const { serviceName, subService, serviceCategory, providerId, price } = route.params || {};
+    const {
+        serviceName,
+        subService,
+        serviceCategory,
+        providerId,
+        price,
+        presetAddress,
+        initialDescription,
+        initialNotes,
+    } = route.params || {};
 
-    const [description, setDescription] = useState("");
-    const [notes, setNotes] = useState("");
+    const [selectedAddress, setSelectedAddress] = useState(presetAddress || null);
+    const [description, setDescription] = useState(initialDescription || "");
+    const [notes, setNotes] = useState(initialNotes || "");
     const isFormValid = description.trim() && selectedAddress && !isSubmitting;
 
     const handleBooking = async () => {

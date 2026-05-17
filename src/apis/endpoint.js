@@ -32,4 +32,5 @@ export const AUTH_ENDPOINTS = {
   GET_MESSAGES: `${BASE_URL}/messages`,
   DELETE_MESSAGES_FOR_USER: `${BASE_URL}/delete-messages-for-user`,
   DELETE_SINGLE_MESSAGE: `${BASE_URL}/delete-single-message`,
+  GET_SERVICE_VARIANTS: `${BASE_URL}/service-variants`,
 };

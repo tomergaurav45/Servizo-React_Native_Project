@@ -677,3 +677,21 @@ export const deleteSingleMessage = async (id) => {
     };
   }
 };
+
+export const getServiceVariants = async (serviceName) => {
+  try {
+    const response = await fetch(
+      `${AUTH_ENDPOINTS.GET_SERVICE_VARIANTS}/${encodeURIComponent(serviceName)}`
+    );
+
+    const data = await response.json();
+
+    return data;
+
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+    };
+  }
+};

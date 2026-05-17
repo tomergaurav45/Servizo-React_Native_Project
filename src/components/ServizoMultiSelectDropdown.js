@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 import { COLORS, SIZES } from "../utils/constants";
@@ -66,7 +66,10 @@ export default function ServizoMultiSelectDropdown({
 
         <Text style={styles.text}>
           {selectedValues.length > 0
-            ? selectedValues.join(", ")
+            ? selectedValues.length <= 3
+              ? selectedValues.join(", ")
+              : `${selectedValues.slice(0, 3).join(", ")} +${selectedValues.length - 3
+              } more`
             : placeholder}
         </Text>
 
@@ -80,32 +83,32 @@ export default function ServizoMultiSelectDropdown({
       {/* Dropdown List */}
       {open && (
         <View style={styles.dropdown}>
-        <ScrollView style={{ maxHeight: 180 }}
-        nestedScrollEnabled={true}
-  showsVerticalScrollIndicator={true}
-   showsHorizontalScrollIndicator={false}>
-  {data.map((item, index) => {
-    const selected = tempSelected.includes(item);
+          <ScrollView style={{ maxHeight: 180 }}
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={true}
+            showsHorizontalScrollIndicator={false}>
+            {data.map((item, index) => {
+              const selected = tempSelected.includes(item);
 
-    return (
-      <TouchableOpacity
-        key={index}
-        style={styles.option}
-        onPress={() => toggleItem(item)}
-      >
-        <Text style={styles.optionText}>{item}</Text>
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.option}
+                  onPress={() => toggleItem(item)}
+                >
+                  <Text style={styles.optionText}>{item}</Text>
 
-        {selected && (
-          <Ionicons
-            name="checkmark-circle"
-            size={18}
-            color={COLORS.primary}
-          />
-        )}
-      </TouchableOpacity>
-    );
-  })}
-</ScrollView>
+                  {selected && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={18}
+                      color={COLORS.primary}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
           {/* Action Buttons */}
           <View style={styles.actions}>
@@ -144,12 +147,14 @@ const styles = StyleSheet.create({
 
   inputContainer: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     backgroundColor: COLORS.white,
     borderRadius: SIZES.radius * 1.5,
     paddingHorizontal: 12,
-    height: 48,
+    paddingVertical: 12,
+    minHeight: 48,
+
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
@@ -164,6 +169,8 @@ const styles = StyleSheet.create({
   text: {
     flex: 1,
     color: COLORS.textDark,
+    flexWrap: "wrap",
+    marginRight: 10,
   },
 
   dropdown: {

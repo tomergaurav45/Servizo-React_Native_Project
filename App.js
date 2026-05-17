@@ -8,6 +8,7 @@ import AddAddressMap from "./src/screens/AddAddressMap";
 import AllServicesScreen from "./src/screens/AllServicesScreen";
 import BookingScreen from "./src/screens/BookingsScreen";
 import ChangePassword from "./src/screens/ChangePassword";
+import DeliveryBookingScreen from "./src/screens/DeliveryBookingScreen";
 import EditProfileScreen from "./src/screens/EditProfileScreen";
 import FinalScreen from "./src/screens/FinalScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
@@ -19,6 +20,7 @@ import NotificationScreen from "./src/screens/NotificationScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import ReviewScreen from "./src/screens/ReviewScreen";
 import ServiceListScreen from "./src/screens/ServiceListScreen";
+import VariantSelectionScreen from "./src/screens/VariantSelectionScreen";
 const Stack = createNativeStackNavigator();
 
 const toastConfig = {
@@ -37,9 +39,9 @@ function AppNavigator() {
           <Stack.Screen name="MainTabs" component={BottomTabs} />
           <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
           <Stack.Screen
-  name="BookingScreen"
-  component={BookingScreen}
-/>
+            name="BookingScreen"
+            component={BookingScreen}
+          />
           <Stack.Screen
             name="ManageAddressScreen"
             component={ManageAddressScreen}
@@ -69,6 +71,14 @@ function AppNavigator() {
             component={ServiceListScreen}
           />
           <Stack.Screen
+            name="VariantSelectionScreen"
+            component={VariantSelectionScreen}
+          />
+          <Stack.Screen
+            name="DeliveryBookingScreen"
+            component={DeliveryBookingScreen}
+          />
+          <Stack.Screen
             name="AllServicesScreen"
             component={AllServicesScreen}
           />
@@ -77,9 +87,9 @@ function AppNavigator() {
             component={FinalScreen}
           />
           <Stack.Screen
-  name="MessageScreen"
-  component={MessageScreen}
-/>
+            name="MessageScreen"
+            component={MessageScreen}
+          />
 
         </>
       ) : (
