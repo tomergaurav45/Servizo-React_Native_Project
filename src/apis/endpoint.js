@@ -27,6 +27,7 @@ export const AUTH_ENDPOINTS = {
   GET_PROVIDER_REVIEWS: `${BASE_URL}/provider-reviews`,
   UPDATE_ONLINE_STATUS: `${BASE_URL}/update-online-status`,
   GET_NOTIFICATIONS: `${BASE_URL}/notifications`,
+  CREATE_NOTIFICATION: `${BASE_URL}/notifications`,
   MARK_NOTIFICATION_READ: `${BASE_URL}/mark-read`,
   SEND_MESSAGE: `${BASE_URL}/send-message`,
   GET_MESSAGES: `${BASE_URL}/messages`,

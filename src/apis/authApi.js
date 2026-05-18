@@ -576,6 +576,21 @@ export const getNotifications = async (userId) => {
   }
 };
 
+export const createNotification = async (payload) => {
+  try {
+    const res = await fetch(AUTH_ENDPOINTS.CREATE_NOTIFICATION, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    return await res.json();
+  } catch (err) {
+    console.log("Create notification failed:", err);
+    return { success: false };
+  }
+};
+
 export const markNotificationRead = async (id) => {
   await fetch(`${AUTH_ENDPOINTS.MARK_NOTIFICATION_READ}`, {
     method: "POST",

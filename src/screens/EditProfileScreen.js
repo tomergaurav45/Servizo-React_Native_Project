@@ -186,12 +186,12 @@ export default function EditProfileScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-       
+
         <View style={styles.topBar}>
           <ServizoBackButton />
         </View>
 
-       
+
         <View style={styles.hero}>
           <AvatarCircle firstName={firstName} lastName={lastName} />
           <View style={{ flex: 1 }}>
@@ -206,7 +206,7 @@ export default function EditProfileScreen() {
 
         <View style={styles.divider} />
 
-       
+
         <View style={styles.card}>
           <SectionLabel icon="person-outline" label="Personal information" />
 
@@ -254,11 +254,11 @@ export default function EditProfileScreen() {
           <FieldError error={genderError} />
         </View>
 
-        
+
         <View style={[styles.card, { marginTop: 12 }]}>
           <SectionLabel icon="briefcase-outline" label="Professional information" />
 
-        
+
           {roleEditable ? (
             <ServizoDropdown
               label="Role"
@@ -292,20 +292,47 @@ export default function EditProfileScreen() {
                 label="Skills"
                 icon="build-outline"
                 data={[
-                  "Plumber", "Electrician", "Deep Cleaning",
-                  "Kitchen Cleaning Specialist", "Bathroom Cleaning Specialist",
-                  "Sofa & Carpet Cleaning", "AC Technician", "Painter",
-                  "Carpenter", "Appliance Repair Technician", "Mobile Repair Technician",
-                  "CCTV Technician", "Network Technician", "Beautician",
-                  "Hair Stylist", "Makeup Artist", "Massage Therapist",
-                  "Nail Technician", "Tutor", "Music Teacher",
-                  "Fitness Trainer", "Yoga Instructor", "Delivery Executive",
-                  "Packers & Movers Helper", "Truck Driver", "Loader / Unloader",
-                  "Driver", "Mechanic", "Car Detailer", "Tyre Specialist",
-                  "Gardener", "Security Guard", "Locksmith", "RO Technician",
-                  "Nurse", "Caregiver", "Physiotherapist", "Photographer",
-                  "Videographer", "DJ", "Event Decorator", "Caterer",
-                  "Interior Designer", "Mason", "Tile Worker", "Welder",
+                  "Plumber",
+                  "Electrician",
+                  "Cleaner",
+                  "AC Technician",
+                  "Painter",
+                  "Carpenter",
+                  "Appliance Repair Technician",
+                  "Mobile Repair Technician",
+                  "CCTV Technician",
+                  "Network Technician",
+                  "Beautician",
+                  "Hair Stylist",
+                  "Makeup Artist",
+                  "Massage Therapist",
+                  "Nail Technician",
+                  "Tutor",
+                  "Music Teacher",
+                  "Fitness Trainer",
+                  "Yoga Instructor",
+                  "Delivery Executive",
+                  "Packers & Movers",
+                  "Driver",
+                  "Mechanic",
+                  "Car Detailer",
+                  "Tyre Specialist",
+                  "Gardener",
+                  "Security Guard",
+                  "Locksmith",
+                  "RO Technician",
+                  "Nurse",
+                  "Caregiver",
+                  "Physiotherapist",
+                  "Photographer",
+                  "Videographer",
+                  "DJ",
+                  "Event Decorator",
+                  "Caterer",
+                  "Interior Designer",
+                  "Mason",
+                  "Tile Worker",
+                  "Welder"
                 ]}
                 selectedValues={skills}
                 placeholder="Select Skills"
@@ -336,7 +363,7 @@ export default function EditProfileScreen() {
           )}
         </View>
 
-      
+
         <TouchableOpacity style={styles.saveBtn} onPress={handleSaveChanges} activeOpacity={0.85}>
           <Ionicons name="checkmark" size={18} color="#fff" />
           <Text style={styles.saveBtnText}>Save Changes</Text>
@@ -344,7 +371,7 @@ export default function EditProfileScreen() {
 
       </ScrollView>
 
-      
+
       <RoleChangeModal
         visible={showRoleModal}
         onCancel={() => setShowRoleModal(false)}
@@ -364,13 +391,13 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
 
- 
+
   topBar: {
     paddingHorizontal: 20,
     paddingTop: 8,
   },
 
- 
+
   hero: {
     flexDirection: "row",
     alignItems: "center",
@@ -404,7 +431,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  
+
   avatar: {
     width: 56,
     height: 56,
@@ -421,7 +448,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  
+
   divider: {
     height: 1,
     backgroundColor: C.border,
@@ -429,7 +456,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  
+
   card: {
     backgroundColor: C.card,
     borderRadius: 20,
@@ -440,7 +467,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
 
-  
+
   sectionLabel: {
     flexDirection: "row",
     alignItems: "center",
@@ -458,14 +485,14 @@ const styles = StyleSheet.create({
     color: C.muted,
   },
 
-  
+
   providerDivider: {
     height: 1,
     backgroundColor: C.border,
     marginVertical: 10,
   },
 
-  
+
   roleLockBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -479,7 +506,7 @@ const styles = StyleSheet.create({
     color: C.muted,
   },
 
-  
+
   errorRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -493,7 +520,7 @@ const styles = StyleSheet.create({
     color: C.danger,
   },
 
- 
+
   saveBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -512,7 +539,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
 
-  
+
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(28,26,23,0.45)",

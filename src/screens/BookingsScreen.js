@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { acceptBooking, addReview, completeBooking, getProviderRequests, getUserBookings } from "../apis/authApi";
+import { acceptBooking, addReview, completeBooking, createNotification, getProviderRequests, getUserBookings } from "../apis/authApi";
 import ServizoBackButton from "../components/ServizoBackButton";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
@@ -336,10 +336,34 @@ export default function BookingScreen() {
                   style={styles.acceptBtn}
                   activeOpacity={0.85}
                   onPress={async () => {
-                    await acceptBooking({
+                    const acceptRes = await acceptBooking({
                       bookingId: selectedJob.bookingId,
                       providerId: user.userId,
                     });
+
+                    if (acceptRes?.success) {
+                      const providerName = user?.name || "Provider";
+                      const providerPhone = user?.phone || "Not available";
+                      const customerId = selectedJob?.participants?.user?.userId;
+
+                      if (customerId) {
+                        await createNotification({
+                          userId: customerId,
+                          type: "booking",
+                          title: "Provider Accepted Your Request",
+                          message: `${providerName} accepted your ${selectedJob?.serviceName || "service"} request. Contact: ${providerPhone}`,
+                          bookingId: selectedJob.bookingId,
+                          data: {
+                            providerId: user.userId,
+                            providerName,
+                            providerPhone,
+                            serviceName: selectedJob?.serviceName,
+                            subService: selectedJob?.subService,
+                            price: selectedJob?.price,
+                          },
+                        });
+                      }
+                    }
 
                     setShowModal(false);
 

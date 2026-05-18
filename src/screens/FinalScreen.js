@@ -10,17 +10,19 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
-import { acceptBooking, createBooking } from "../apis/authApi";
+import { acceptBooking, createBooking, createNotification } from "../apis/authApi";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../utils/constants";
 
 export default function FinalScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const insets = useSafeAreaInsets();
     const { user } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
         serviceName,
@@ -36,34 +38,41 @@ export default function FinalScreen() {
     const [selectedAddress, setSelectedAddress] = useState(presetAddress || null);
     const [description, setDescription] = useState(initialDescription || "");
     const [notes, setNotes] = useState(initialNotes || "");
+
     const isFormValid = description.trim() && selectedAddress && !isSubmitting;
 
+    const showError = (text1, text2) => {
+        Toast.show({ type: "error", text1, text2 });
+    };
+
+    const goToBookings = () => {
+        navigation.navigate("MainTabs", { screen: "Bookings" });
+    };
+
     const handleBooking = async () => {
-        if (!description) {
-            alert("Please describe your problem");
+        if (!description.trim()) {
+            showError("Description Required", "Please describe your requirement.");
             return;
         }
 
         if (!selectedAddress) {
-            alert("Please select address");
+            showError("Address Required", "Please select an address.");
             return;
         }
 
         setIsSubmitting(true);
 
         try {
-
-            const normalizedCategory =
-                serviceCategory?.toLowerCase().includes("clean")
-                    ? "Cleaning"
-                    : serviceCategory;
+            const normalizedCategory = serviceCategory?.toLowerCase().includes("clean")
+                ? "Cleaning"
+                : serviceCategory;
 
             const payload = {
                 userId: user?.userId,
                 serviceName,
                 serviceCategory: normalizedCategory,
                 subService,
-                description,
+                description: description.trim(),
                 notes,
                 addressId: selectedAddress?.id,
                 price,
@@ -72,19 +81,31 @@ export default function FinalScreen() {
             const res = await createBooking(payload);
 
             if (!res.success) {
-                alert(res.message);
+                showError("Booking Failed", res.message || "Please try again.");
                 return;
             }
 
-            if (providerId) {
-                const createdBooking =
-                    res.data || res.booking || res.result || {};
-                const createdBookingId =
-                    createdBooking.bookingId || createdBooking._id || res.bookingId;
+            const createdBooking = res.data || res.booking || res.result || {};
+            const createdBookingId =
+                createdBooking.bookingId || createdBooking._id || res.bookingId;
 
+            await createNotification({
+                userId: user?.userId,
+                type: "booking",
+                title: "Booking Request Sent",
+                message:
+                    "Your booking request has been sent to providers. Once a provider accepts it, we will notify you.",
+                bookingId: createdBookingId,
+            });
+
+            if (providerId) {
                 if (!createdBookingId) {
-                    alert("Booking created, but booking id was not returned for provider assignment.");
-                    navigation.navigate("ActivityScreen");
+                    Toast.show({
+                        type: "info",
+                        text1: "Booking Created",
+                        text2: "Provider assignment could not be completed.",
+                    });
+                    goToBookings();
                     return;
                 }
 
@@ -94,41 +115,50 @@ export default function FinalScreen() {
                 });
 
                 if (!providerRes.success) {
-                    alert(
-                        `Booking created, but provider request failed: ${providerRes.message}`
-                    );
-                    navigation.navigate("ActivityScreen");
+                    Toast.show({
+                        type: "info",
+                        text1: "Booking Created",
+                        text2: providerRes.message || "Provider request failed.",
+                    });
+                    goToBookings();
                     return;
                 }
             }
 
-            alert(
-                providerId
-                    ? "Booking confirmed and request sent to provider!"
-                    : "Booking confirmed!"
-            );
+            Toast.show({
+                type: "success",
+                text1: "Booking Confirmed",
+                text2: providerId
+                    ? "Your request was sent to the provider."
+                    : "Your service booking was created.",
+            });
 
-            navigation.navigate("ActivityScreen");
+            goToBookings();
+        } catch (error) {
+            showError(
+                "Booking Failed",
+                error?.message || "Something went wrong. Please try again."
+            );
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <ScrollView contentContainerStyle={styles.container}>
-
-
+        <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+            <ScrollView
+                contentContainerStyle={styles.container}
+                showsVerticalScrollIndicator={false}
+            >
                 <View style={styles.card}>
                     <Text style={styles.label}>Service</Text>
                     <Text style={styles.serviceText}>
-                        {serviceName} → {subService}
+                        {serviceName} - {subService}
                     </Text>
                 </View>
 
-
                 <View style={styles.card}>
-                    <Text style={styles.label}>Describe your problem *</Text>
+                    <Text style={styles.label}>Describe your requirement *</Text>
                     <TextInput
                         placeholder="e.g. Fan not working properly..."
                         value={description}
@@ -144,26 +174,23 @@ export default function FinalScreen() {
                         navigation.navigate("ManageAddressScreen", {
                             onSelectAddress: (address) => {
                                 setSelectedAddress(address);
-                            }
+                            },
                         })
                     }
+                    activeOpacity={0.85}
                 >
-                    <Text style={styles.label}>Address</Text>
-                    <Text style={styles.addressText}>
+                    <View style={styles.cardHeader}>
+                        <Text style={styles.label}>Address</Text>
+                        <Ionicons name="chevron-forward-outline" size={18} color="#999" />
+                    </View>
+
+                    <Text style={selectedAddress ? styles.addressText : styles.placeholderText}>
                         {selectedAddress
                             ? `${selectedAddress.title}, ${selectedAddress.fullAddress}`
                             : "Select or change your address"}
                     </Text>
-
-                    <Ionicons
-                        name="chevron-forward-outline"
-                        size={18}
-                        color="#999"
-                        style={{ marginLeft: "auto" }}
-                    />
                 </TouchableOpacity>
 
-                {/* 🔹 Notes */}
                 <View style={styles.card}>
                     <Text style={styles.label}>Additional Notes</Text>
                     <TextInput
@@ -174,22 +201,19 @@ export default function FinalScreen() {
                         style={styles.input}
                     />
                 </View>
+
                 <View style={styles.card}>
                     <Text style={styles.label}>Price</Text>
-                    <Text style={styles.serviceText}>₹{price}</Text>
+                    <Text style={styles.serviceText}>{`\u20B9${price || 0}`}</Text>
                 </View>
-
             </ScrollView>
 
-
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}>
                 <TouchableOpacity
-                    style={[
-                        styles.button,
-                        !isFormValid && { backgroundColor: "#ccc" } // disabled color
-                    ]}
+                    style={[styles.button, !isFormValid && styles.buttonDisabled]}
                     onPress={handleBooking}
                     disabled={!isFormValid}
+                    activeOpacity={0.85}
                 >
                     {isSubmitting ? (
                         <ActivityIndicator color="#fff" />
@@ -217,6 +241,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 15,
     },
+    cardHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 8,
+    },
     label: {
         fontSize: 14,
         fontWeight: "600",
@@ -237,6 +267,10 @@ const styles = StyleSheet.create({
     },
     addressText: {
         color: "#666",
+        lineHeight: 20,
+    },
+    placeholderText: {
+        color: "#999",
     },
     footer: {
         position: "absolute",
@@ -252,6 +286,9 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         alignItems: "center",
+    },
+    buttonDisabled: {
+        backgroundColor: "#ccc",
     },
     buttonText: {
         color: "#fff",

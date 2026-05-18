@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import {
   Alert,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -278,7 +279,10 @@ export default function ProfileScreen({ navigation }) {
           </View>
         )}
       </View>
-
+      <ScrollView
+  showsVerticalScrollIndicator={false}
+  contentContainerStyle={styles.scroll}
+>
       {/* Menu Group 1 */}
       <View style={styles.menuCard}>
         {MENU_ITEMS_TOP.map((item, i) => (
@@ -331,7 +335,7 @@ export default function ProfileScreen({ navigation }) {
         <Ionicons name="log-out-outline" size={18} color="#f8f7f4" />
         <Text style={styles.logoutText}>Log out</Text>
       </TouchableOpacity>
-
+      </ScrollView>
 
       <ServizoAlert
         visible={showLogoutAlert}
