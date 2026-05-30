@@ -1,0 +1,608 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
+import { useCallback, useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { getAddresses, getProviderRequests, getProviderReviews } from "../apis/authApi";
+import { ServizoAlert } from "../components/ServizoAlert";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+
+
+const MENU_ITEMS_TOP = [
+  {
+    icon: "person-outline",
+    label: "Edit Profile",
+    screen: "EditProfileScreen",
+    iconBg: "#eef4ff",
+    iconColor: "#4a7fe0",
+  },
+  {
+    icon: "location-outline",
+    label: "Manage Address",
+    screen: "ManageAddressScreen",
+    iconBg: "#fff0e6",
+    iconColor: "#e07a4a",
+  },
+  {
+    icon: "chatbubble-ellipses-outline",
+    label: "My Ratings / Reviews",
+    screen: "ReviewScreen",
+    iconBg: "#fdf0ff",
+    iconColor: "#9b59b6",
+    providerOnly: true,
+  },
+];
+
+const MENU_ITEMS_BOTTOM = [
+  {
+    icon: "lock-closed-outline",
+    label: "Change Password",
+    screen: "ChangePassword",
+    iconBg: "#fff5e6",
+    iconColor: "#e0943a",
+  },
+  {
+    icon: "help-circle-outline",
+    label: "Help & Support",
+    screen: "HelpSupportScreen",
+    iconBg: "#e8f5ff",
+    iconColor: "#3a9ee0",
+  },
+];
+
+export default function ProfileScreen({ navigation }) {
+  const { user, logout } = useAuth();
+  const { theme, isDark, toggleTheme } = useTheme();
+  const [image, setImage] = useState(null);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const isProvider = user?.role === "provider";
+  const [addresses, setAddresses] = useState([]);
+  const [stats, setStats] = useState({
+    jobsDone: 0,
+    rating: 0,
+    pending: 0,
+  });
+  const isAddressMissing = () => {
+    return !addresses || addresses.length === 0;
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchAddresses = async () => {
+        const res = await getAddresses(user?.userId);
+        if (res.success) {
+          setAddresses(res.data || []);
+        }
+      };
+
+      fetchAddresses();
+    }, [user])
+  );
+
+  const fetchStats = useCallback(async () => {
+    try {
+      if (!user?.userId) return;
+
+
+      const bookingRes = await getProviderRequests(user.userId);
+
+      let jobsDone = 0;
+      let pending = 0;
+
+      if (bookingRes.success) {
+        jobsDone = bookingRes.data.filter(
+          item => item.status === "COMPLETED"
+        ).length;
+
+        pending = bookingRes.data.filter(
+          item =>
+            item.status === "OPEN" ||
+            item.status === "ACCEPTED"
+        ).length;
+      }
+      const reviewRes = await getProviderReviews(user.userId);
+
+      let rating = 0;
+
+      if (reviewRes.success && reviewRes.data) {
+        rating = reviewRes.data.avgRating || 0;
+      }
+
+      setStats({
+        jobsDone,
+        rating,
+        pending,
+      });
+
+    } catch (err) {
+      console.log(err);
+    }
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchStats();
+    }, [fetchStats])
+  );
+
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission Required",
+        "Allow access to gallery to upload profile picture"
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+  const isProfileIncomplete = () => {
+    if (!user?.phone || user.phone.length !== 10) return true;
+    if (!user?.gender) return true;
+    if (!user?.dob) return true;
+
+    // provider specific
+    if (user?.role === "provider") {
+      if (!user?.skills || user.skills.length === 0) return true;
+      if (!user?.experience) return true;
+      if (!user?.availability) return true;
+    }
+
+    return false;
+  };
+
+  const renderMenuItem = (item, index, arr) => {
+    if (item.providerOnly && !isProvider) return null;
+    return (
+      <View key={item.screen}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate(item.screen)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: item.iconBg }]}>
+            <Ionicons name={item.icon} size={18} color={item.iconColor} />
+          </View>
+          <Text style={[styles.menuLabel, { color: theme.colors.text }]}>{item.label}</Text>
+          <Ionicons name="chevron-forward" size={16} color={theme.colors.textMuted} />
+        </TouchableOpacity>
+        {index < arr.length - 1 && <View style={[styles.menuSep, { backgroundColor: theme.colors.border }]} />}
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.bg }]}>
+
+
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Profile</Text>
+      </View>
+
+
+      <View style={[styles.profileCard, { backgroundColor: theme.colors.profileCard }]}>
+
+        <View style={styles.deco1} />
+        <View style={styles.deco2} />
+
+        <View style={styles.profileRow}>
+
+          <TouchableOpacity onPress={pickImage} style={styles.avatarWrap}>
+            <Image
+              source={
+                image
+                  ? { uri: image }
+                  : require("../../assets/images/avatar.png")
+              }
+              style={styles.avatar}
+            />
+            <View style={styles.cameraBtn}>
+              <Ionicons name="camera" size={11} color={theme.colors.bg} />
+            </View>
+          </TouchableOpacity>
+
+
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileName, { color: theme.colors.profileText }]}>{user?.name || "Your Name"}</Text>
+            <Text style={[styles.profileEmail, { color: theme.colors.profileMuted }]}>{user?.email || "email@example.com"}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: theme.colors.accent + "26", borderColor: theme.colors.accent + "59" }]}>
+              <View style={[styles.roleDot, { backgroundColor: theme.colors.accent }]} />
+              <Text style={[styles.roleText, { color: theme.colors.accent }]}>
+                {isProvider ? "Provider" : "Customer"}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+
+        {isProvider && (
+          <View style={styles.statsRow}>
+            {[
+              {
+                label: "Jobs Done",
+                value: stats.jobsDone,
+                screen: "BookingScreen",
+                initialTab: "completed",
+                status: "COMPLETED",
+              },
+              {
+                label: "Rating",
+                value: stats.rating,
+                screen: "ReviewScreen",
+              },
+              {
+                label: "Pending",
+                value: stats.pending,
+                screen: "BookingScreen",
+                initialTab: "pending",
+                status: "OPEN",
+              },
+            ].map((stat, i) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.statBox}
+                activeOpacity={0.7}
+                onPress={() =>
+                  navigation.navigate(stat.screen, {
+                    initialTab: stat.initialTab,
+                    statusFilter: stat.status,
+                  })
+                }
+              >
+                <Text style={[styles.statValue, { color: theme.colors.profileText }]}>{stat.value}</Text>
+                <Text style={[styles.statLabel, { color: theme.colors.profileMuted }]}>{stat.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+
+        <View style={[styles.menuCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={toggleTheme}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.iconWrap, { backgroundColor: theme.colors.accent + "18" }]}>
+              <Ionicons
+                name={isDark ? "sunny-outline" : "moon-outline"}
+                size={18}
+                color={theme.colors.accent}
+              />
+            </View>
+            <Text style={[styles.menuLabel, { color: theme.colors.text }]}>
+              {isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
+            </Text>
+            <Text style={[styles.themeValue, { color: theme.colors.textMuted }]}>
+              {theme.name}
+            </Text>
+          </TouchableOpacity>
+          <View style={[styles.menuSep, { backgroundColor: theme.colors.border }]} />
+          {MENU_ITEMS_TOP.map((item, i) => (
+            <View key={item.screen}>
+
+              {renderMenuItem(item, i, MENU_ITEMS_TOP)}
+
+              {item.label === "Edit Profile" && isProfileIncomplete() && (
+                <TouchableOpacity
+                  style={[styles.warningCard, { backgroundColor: theme.colors.danger }]}
+                  onPress={() => navigation.navigate("EditProfileScreen")}
+                >
+                  <Ionicons name="warning-outline" size={16} color={theme.colors.bg} />
+                  <Text style={[styles.warningText, { color: theme.colors.bg }]}>
+                    Please complete your profile
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+
+              {item.label === "Manage Address" && isAddressMissing() && (
+                <TouchableOpacity
+                  style={[styles.warningCard, { backgroundColor: theme.colors.danger }]}
+                  onPress={() => navigation.navigate("ManageAddressScreen")}
+                >
+                  <Ionicons name="location-outline" size={16} color={theme.colors.bg} />
+                  <Text style={[styles.warningText, { color: theme.colors.bg }]}>
+                    Please add at least one address
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+            </View>
+          ))}
+        </View>
+
+
+        <View style={[styles.menuCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          {MENU_ITEMS_BOTTOM.map((item, i) =>
+            renderMenuItem(item, i, MENU_ITEMS_BOTTOM)
+          )}
+        </View>
+
+
+        <TouchableOpacity
+          style={[styles.logoutBtn, { backgroundColor: theme.colors.primary }]}
+          onPress={() => setShowLogoutAlert(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="log-out-outline" size={18} color={theme.colors.bg} />
+          <Text style={[styles.logoutText, { color: theme.colors.bg }]}>Log out</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      <ServizoAlert
+        visible={showLogoutAlert}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        onCancel={() => setShowLogoutAlert(false)}
+        onConfirm={() => {
+          setShowLogoutAlert(false);
+          logout();
+        }}
+      />
+
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f8f7f4",
+  },
+  scroll: {
+    paddingBottom: 40,
+  },
+
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 30,
+    fontWeight: "700",
+    color: "#2D3436",
+    letterSpacing: -0.5,
+  },
+  settingsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#e8e6e1",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+
+  profileCard: {
+    margin: 12,
+    backgroundColor: "#1c1c1e",
+    borderRadius: 28,
+    padding: 24,
+    overflow: "hidden",
+  },
+  deco1: {
+    position: "absolute",
+    top: -30,
+    right: -30,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  deco2: {
+    position: "absolute",
+    bottom: -20,
+    left: -20,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+  profileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  avatarWrap: {
+    position: "relative",
+  },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+  },
+  avatarFallback: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    backgroundColor: "#c49a7a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarInitials: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  cameraBtn: {
+    position: "absolute",
+    bottom: -4,
+    right: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    backgroundColor: "#FDCB6E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 19,
+    fontWeight: "700",
+    color: "#f8f7f4",
+    letterSpacing: -0.3,
+  },
+  profileEmail: {
+    fontSize: 13,
+    color: "#a09e9a",
+    marginTop: 3,
+    fontWeight: "300",
+  },
+  roleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 10,
+    backgroundColor: "rgba(245,200,66,0.15)",
+    borderWidth: 0.5,
+    borderColor: "rgba(245,200,66,0.35)",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: "flex-start",
+  },
+  roleDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#f5c842",
+  },
+  roleText: {
+    fontSize: 11,
+    color: "#f5c842",
+    fontWeight: "500",
+    letterSpacing: 0.3,
+  },
+
+
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 20,
+  },
+  warningCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E53935",
+    marginHorizontal: 16,
+    marginBottom: 8,
+    padding: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+
+  warningText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderRadius: 14,
+    padding: 12,
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#f8f7f4",
+    letterSpacing: -0.3,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: "#a09e9a",
+    marginTop: 2,
+  },
+
+
+  menuCard: {
+    marginHorizontal: 12,
+    marginBottom: 12,
+    backgroundColor: "#ffffff",
+    borderRadius: 22,
+    borderWidth: 0.5,
+    borderColor: "#e8e6e1",
+    overflow: "hidden",
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  iconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  menuLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: "#2D3436",
+    fontWeight: "400",
+  },
+  themeValue: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  menuSep: {
+    height: 0.5,
+    backgroundColor: "#e8e6e1",
+    marginLeft: 68,
+  },
+
+
+  logoutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: "#1c1c1e",
+    marginHorizontal: 12,
+    marginTop: 4,
+    borderRadius: 18,
+    paddingVertical: 16,
+  },
+  logoutText: {
+    color: "#f8f7f4",
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+  },
+});
+
+

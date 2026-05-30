@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Servizo",
+    "slug": "Servizo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "servizo",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.tomergaurav.Servizo"
+    },
+    "web": {
+      "output": "single"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      "expo-video",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9dc9810f-8924-46f3-9096-1521d9c50ee7"
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useTheme } from "../context/ThemeContext";
+import { COLORS } from "../utils/constants";
+export default function ServizoButton({
+  title,
+  onPress,
+  style,
+  textStyle,
+  disabled = false,
+  loading = false,
+  variant = "primary",
+  iconLeft = null,
+  iconRight = null,
+}) {
+  const { theme } = useTheme();
+  const colors = theme.colors;
+
+  const getButtonStyle = () => {
+    switch (variant) {
+      case "secondary":
+        return {
+          backgroundColor: colors.surfaceAlt,
+        };
+      case "outline":
+        return {
+          backgroundColor: "transparent",
+          borderWidth: 1.5,
+          borderColor: colors.primary,
+        };
+      default:
+        return {
+          backgroundColor: colors.primary,
+        };
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.button,
+        getButtonStyle(),
+        disabled && { opacity: 0.6 },
+        style,
+      ]}
+      onPress={onPress}
+      activeOpacity={0.8}
+      disabled={disabled || loading}
+    >
+      {loading ? (
+        <ActivityIndicator color={variant === "outline" ? colors.primary : colors.bg} />
+      ) : (
+        <>
+          {iconLeft && <>{iconLeft}</>}
+          <Text
+            style={[
+              styles.text,
+              variant === "outline"
+                ? { color: colors.primary }
+                : { color: colors.bg },
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+          {iconRight && <>{iconRight}</>}
+        </>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    paddingVertical: Platform.OS === "web" ? 14 : 12,
+    paddingHorizontal: 20,
+    elevation: 2,
+    shadowColor: COLORS.shadow,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: "bold",
+    letterSpacing: 0.5,
+  },
+});
